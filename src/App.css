@@ -1,0 +1,31 @@
+#root {
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+#locationList div {
+  font-size: 0.7rem;
+}
+
+#floorList div {
+  font-size: 0.7rem;
+}
+
+#pathList div {
+  font-size: 0.7rem;
+}
+
+.mid_button {
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  margin: 0 1px 0px 0px;
+}
+
+@media (max-width: 576px) {
+  #map {
+    height: 70vh;
+    width: 90vw;
+    margin: 10px 0px;
+  }
+}
