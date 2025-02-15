@@ -14,7 +14,7 @@ import Paths from './components/Paths';
 import AdvancedPoints from './components/AdvancedPoints';
 import NavigationController from './components/NavigationController';
 
-function App() : React.JSX.Element {
+function App(): React.JSX.Element {
   const currentFloor = useAppSelector((state) => state.appReducer.currentFloor);
 
   const dispath = useAppDispatch();
@@ -31,27 +31,24 @@ function App() : React.JSX.Element {
 
   return (
     // <Container>
-      <Row>
-        <Col lg={2} md={3} xs={4}>
-          <Stack gap={4}>
-            <Floors />
-            <Polygons />
-            <Paths />
-          </Stack>
-        </Col>
-        <Col lg={8} md={6} xs={4}>
-          {
-            currentFloor != null &&
-            <Map />
-          }
-        </Col>
-        <Col lg={2} md={3} xs={4}>
-          <Stack gap={4}>
-            <AdvancedPoints />
-            <NavigationController />
-          </Stack>
-        </Col>
-      </Row>
+    <Row>
+      <Col lg={2} >
+        <Stack gap={4}>
+          <Floors />
+          <Polygons />
+          <Paths />
+        </Stack>
+      </Col>
+      <Col lg={8} >
+        {currentFloor != null && <Map />}
+      </Col>
+      <Col lg={2} >
+        <Stack gap={4}>
+          <AdvancedPoints />
+          <NavigationController />
+        </Stack>
+      </Col>
+    </Row>
     // </Container>
   );
 }

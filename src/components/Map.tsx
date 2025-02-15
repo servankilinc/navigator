@@ -26,6 +26,10 @@ import { setDrawnItems, setDrawnItemsRoute } from '../redux/reducers/mapSlice';
 import Floor from '../models/Floor';
 import ModalPolygonInfo from './ModalPolygonInfo';
 import ModalAdvencedPointInfo from './ModalAdvencedPointInfo';
+import { ShowAdvancedPoint } from '../services/advancedPointService';
+import { ShowEntrancePoint } from '../services/entrancePointService';
+import { ShowPolygon } from '../services/polygonService';
+import { ShowPath } from '../services/pathService';
 
 function Map() {
   const dispatch = useAppDispatch();
@@ -61,15 +65,19 @@ function Map() {
 
   useEffect(() => {
     polygonListRef.current = polygonList;
+    // console.log("polygonList",polygonList);
   }, [polygonList]);
   useEffect(() => {
     pathListRef.current = pathList;
+    // console.log("pathList",pathList);
   }, [pathList]);
   useEffect(() => {
     entrancePointsRef.current = entrancePoints;
+    // console.log("entrancePoints",entrancePoints);
   }, [entrancePoints]);
   useEffect(() => {
     advancedPointsRef.current = advancedPoints;
+    // console.log("advancedPoints",advancedPoints);
   }, [advancedPoints]);
   useEffect(() => {
     isEntrancePointAddedRef.current = isEntrancePointAdded;
@@ -80,6 +88,32 @@ function Map() {
 
   useEffect(() => {
     MapInitilaze();
+
+    polygonList
+      .filter((f) => f.properties.floor == 0)
+      .map((polygon) => {
+        ShowPolygon(polygon, drawnItemsRef.current!);
+      });
+
+    entrancePoints
+      .filter((f) => f.properties.floor == 0)
+      .map((entrancePoint) => {
+        ShowEntrancePoint(entrancePoint, drawnItemsRef.current!);
+      });
+
+      advancedPoints
+      .filter((f) => f.properties.floor == 0)
+      .map((advancedPoint) => {
+        ShowAdvancedPoint(advancedPoint, drawnItemsRef.current!);
+      });
+
+    pathList
+      .filter((f) => f.properties.floor == 0)
+      .map((path) => {
+        ShowPath(path, drawnItemsRef.current!);
+      });
+
+
   }, []);
 
   function MapInitilaze() {
@@ -123,7 +157,6 @@ function Map() {
       const createEvent = event as L.DrawEvents.Created;
       const layer = createEvent.layer as CustomLayer;
       const layerType = createEvent.layerType;
-      console.log('---', layerType);
       if (layer.toGeoJSON == null) {
         alert('Layer Type Support');
         return;
@@ -171,7 +204,6 @@ function Map() {
       var layers = editeEvent.layers;
 
       layers.eachLayer(function (_layer) {
-        console.log('LAYER TPE BUL', _layer);
         const layer = _layer as CustomLayer;
 
         if (layer.customProperties?.typeOfData == 'polygon') {
@@ -313,6 +345,7 @@ function Map() {
   }
 
   function CreateEntrancePoint(geoJson: EntrancePointGeoJson, layer: CustomLayer, _id: string) {
+    drawnItemsRef.current!.addLayer(layer);
     var lastPolygon = polygonListRef.current![polygonListRef.current!.length - 1];
     geoJson.properties = {
       layerId: (layer as any)._leaflet_id,
@@ -332,7 +365,7 @@ function Map() {
     geoJson.properties = {
       layerId: (layer as any)._leaflet_id,
       id: _id,
-      floor: currentFloorRef.current!.index,
+      floor: 404, //currentFloorRef.current!.index,
       name: 'Gelişmiş Nokta',
       popupContent: `Gelişmiş Nokta Bilgisi, Kat:${currentFloorRef.current!.index} ID:${_id}`,
     };

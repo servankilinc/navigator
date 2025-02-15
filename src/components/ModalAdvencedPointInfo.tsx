@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, ButtonGroup, Form, Modal } from 'react-bootstrap';
+import { Button, Form, Modal } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import AdvancedPointTypes, { AdvancedPointTypeEntries } from '../models/UIModels/AdvancedPointTypes';
 import { setAdvancedPointInfo } from '../redux/reducers/storageSlice';
 import { HideAdvancedPointByLayer, ShowAdvancedPointByType } from '../services/advancedPointService';
-import { AdvancedPointDirectionTypesEnums } from '../models/UIModels/AdvancedPointDirectionTypes';
-import { FaArrowDown, FaArrowsUpDown, FaArrowUp } from 'react-icons/fa6';
 
 type SectionProps = {
   showModal: (value: boolean) => void;
@@ -18,11 +16,17 @@ export default function ModalAdvencedPointInfo({ isShowing, showModal, advancedP
 
   const drawnItems = useAppSelector((state) => state.mapReducer.drawnItems);
   const advancedPoints = useAppSelector((state) => state.storageReducer.advancedPoints);
+  const floorList  = useAppSelector((state) => state.storageReducer.floorList);
+  
 
   const [pointName, setPointName] = useState<string>('');
   const [pointType, setPointType] = useState<AdvancedPointTypes>(AdvancedPointTypes.stairs);
-  const [pointDirectionType, setPointDirectionType] = useState<AdvancedPointDirectionTypesEnums>(AdvancedPointDirectionTypesEnums.twoWay);
+  const [targetFloorList, setTargetFloorList] = useState<string[]>([]);
 
+  useEffect(() => {
+    console.log("targetFloorList = ",targetFloorList)
+  },[targetFloorList])
+  
   useEffect(() => {
     if (isShowing == true) {
       const polygon = advancedPoints.find((p) => p.properties.id == advancedPointId);
@@ -44,7 +48,7 @@ export default function ModalAdvencedPointInfo({ isShowing, showModal, advancedP
         id: advancedPointId,
         name: pointName != null ? pointName : '',
         type: pointType,
-        directionType: pointDirectionType,
+        targetFloorList: targetFloorList.map(i => parseInt(i))
       })
     );
 
@@ -78,41 +82,17 @@ export default function ModalAdvencedPointInfo({ isShowing, showModal, advancedP
             ))}
           </Form.Select>
         </Form.Group>
-
-        <Form.Group className="mb-3" controlId="formBasic-2">
-          <ButtonGroup className="border shadow-sm">
-            <Button
-              variant="light"
-              onClick={() => setPointDirectionType(AdvancedPointDirectionTypesEnums.up)}
-              className={pointDirectionType == AdvancedPointDirectionTypesEnums.up ? 'active' : ''}
-            >
-              <FaArrowUp />
-            </Button>
-            <Button
-              variant="light"
-              onClick={() => setPointDirectionType(AdvancedPointDirectionTypesEnums.down)}
-              className={pointDirectionType == AdvancedPointDirectionTypesEnums.down ? 'active' : ''}
-            >
-              <FaArrowDown />
-            </Button>
-            <Button
-              variant="light"
-              onClick={() => setPointDirectionType(AdvancedPointDirectionTypesEnums.twoWay)}
-              className={pointDirectionType == AdvancedPointDirectionTypesEnums.twoWay ? 'active' : ''}
-            >
-              <FaArrowsUpDown />
-            </Button>
-          </ButtonGroup>
-          <strong className="d-block">
-            Seçili Yön{' '}
-            {pointDirectionType == AdvancedPointDirectionTypesEnums.up
-              ? 'Sadece Yukarı'
-              : pointDirectionType == AdvancedPointDirectionTypesEnums.down
-              ? 'Sadece Aşağı'
-              : 'Çift Yön'}
-          </strong>
-        </Form.Group>
-
+        {
+          floorList &&
+            <Form.Group className="mb-3" controlId="formBasic-12">
+              <Form.Label>Bulunacağı Kat Listesi</Form.Label>
+              <Form.Select multiple value={targetFloorList} onChange={(e) => setTargetFloorList([].slice.call((e.target as HTMLSelectElement).selectedOptions).map((i: HTMLOptionElement) => i.value))}>
+                {floorList.map((value, index) => 
+                  <option key={index} value={value.index}>{value.name} </option>
+                )}
+              </Form.Select>
+            </Form.Group>
+        }
         <Form.Group className="mb-3" controlId="formBasic-3">
           <Form.Label>Konum İsmi</Form.Label>
           <Form.Control placeholder="Konum İsmi" value={pointName} onChange={(e) => setPointName(e.target.value)} />
