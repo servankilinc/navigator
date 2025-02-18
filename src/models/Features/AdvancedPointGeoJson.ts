@@ -5,6 +5,7 @@ export default interface AdvancedPointGeoJson extends GeoJSON.Feature<GeoJSON.Po
   properties: {
     layerId?: number,
     id: string;
+    groupId: string;
     type?: AdvancedPointTypes,
     directionType?: AdvancedPointDirectionTypesEnums,
     floor: number;

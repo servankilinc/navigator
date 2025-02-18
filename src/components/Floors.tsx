@@ -54,6 +54,12 @@ function Floors() {
 
     dispath(setCurrentFloor(nextFloor));
 
+    drawnItems!.eachLayer(function (layer) {
+      if ((layer as CustomLayer).customProperties?.floor != nextFloor.index) {
+        drawnItems!.removeLayer(layer);
+      }
+    });
+    
     polygonList
       .filter((f) => f.properties.floor == nextFloor.index)
       .map((polygon) => {
@@ -78,11 +84,6 @@ function Floors() {
         ShowPath(path, drawnItems!);
       });
 
-    drawnItems!.eachLayer(function (layer) {
-      if ((layer as CustomLayer).customProperties?.floor != nextFloor.index) {
-        drawnItems!.removeLayer(layer);
-      }
-    });
   }
 
   return (

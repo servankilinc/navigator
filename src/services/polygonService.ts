@@ -1,6 +1,41 @@
 import * as L from "leaflet";
 import CustomLayer from "../models/Features/CustomLayer";
 import PolygonGeoJson from "../models/Features/PolygonGeoJson"
+import { ShowEntrancePoint } from "./entrancePointService";
+import { store } from "../redux/store";
+import { addPolygon, setPolygonCoordinates } from "../redux/reducers/storageSlice";
+import { setEntranceAdded } from "../redux/reducers/appSlice";
+import { Position } from "geojson";
+
+
+ export function CreatePolygon(geoJson: PolygonGeoJson, layer: CustomLayer, _id: string, floor: number, drawnItems: L.FeatureGroup<any>) {
+   drawnItems.addLayer(layer);
+   geoJson.properties = {
+     layerId: (layer as any)._leaflet_id,
+     id: _id,
+     floor: floor,
+     name: 'Bina',
+     popupContent: `Bina Bilgisi, Kat:${floor} ID:${_id}`,
+   };
+   store.dispatch(addPolygon(geoJson as PolygonGeoJson));
+   store.dispatch(setEntranceAdded(false));
+ }
+
+ export function UpdatePolygon(layer: CustomLayer) {
+   if (!(layer instanceof L.Polygon)) throw new Error('Layer is not a polygon!');
+
+   const latlngs = layer.getLatLngs();
+   if (Array.isArray(latlngs) && Array.isArray(latlngs[0])) {
+     const newCoordinates: Position[][] = [[]];
+     (latlngs[0] as L.LatLng[]).forEach((item) => {
+       newCoordinates[0].push([item.lng, item.lat]);
+     });
+     store.dispatch(setPolygonCoordinates({ polygonId: (layer as CustomLayer).customProperties!.id, coordinates: newCoordinates }));
+   }
+   else {
+     throw new Error('Informatinons could not be updated unsuported Type');
+   }
+ }
 
 export function ShowPolygon(polygon: PolygonGeoJson, drawnItems:  L.FeatureGroup<any>): void {
   L.geoJSON(polygon, {
@@ -17,9 +52,11 @@ export function ShowPolygon(polygon: PolygonGeoJson, drawnItems:  L.FeatureGroup
   });
   
   // Add Entrance Point to Map
-  if (polygon.properties.entrance == null) {
-    alert('Be Carefull Entrance point not founded for adding to map, Please add an entrance point to the polygon');
-    return;
+  if (polygon.properties.entrance != null) {
+    ShowEntrancePoint(polygon.properties.entrance, drawnItems);
+  }
+  else{
+    alert('Be carefull there is a building without Entrance point, Please add an entrance point to the building');
   }
 }
 
@@ -31,10 +68,8 @@ export function HidePolygonByLayer(polygonLayer: L.Layer, drawnItems:  L.Feature
 
 export function HidePolygon(polygon: PolygonGeoJson, drawnItems:  L.FeatureGroup<any>): void {
   const polygonLayer = drawnItems.getLayer(polygon.properties.layerId!);
-  if (polygonLayer == null) {
-    alert('Layer of polygon colud not found');
-    return;
-  }
+  if (polygonLayer == null) throw new Error('Layer of polygon colud not found');
+  
   drawnItems.removeLayer(polygonLayer);
 }
 

@@ -1,152 +1,122 @@
-import { useState } from 'react';
-import * as L from 'leaflet';
-import * as turf from '@turf/turf';
-import { alg } from 'graphlib';
+import React, { useState } from 'react';
 import { Button, Form, FormGroup, ListGroup, Stack } from 'react-bootstrap';
-import { useAppSelector } from '../redux/hooks';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { IoNavigateCircle, IoTrash } from 'react-icons/io5';
 import { ClearRoutes } from '../services/pathService';
-import { Position } from 'geojson';
-import Node from '../models/Node';
-import { store } from '../redux/store';
-import { DesignGraph, FindIntersections } from '../services/graphService';
+import { DesignGraph, FindNearestAdvancedPoint, FindNearestNode, FindShortestPath } from '../services/graphService';
+import { showAlertError, showAlertSuccess } from '../redux/reducers/alertSlice';
+import e7 from '../scripts/idGenerator';
+import Route from '../models/Route';
+import { setRoutes } from '../redux/reducers/storageSlice';
 
-export default function NavigationController() {
+export default function NavigationController(): React.JSX.Element {
+  const dispatch = useAppDispatch();
 
   const drawnItems = useAppSelector((state) => state.mapReducer.drawnItems);
   const drawnItemsRoute = useAppSelector((state) => state.mapReducer.drawnItemsRoute);
 
   const currentFloor = useAppSelector((state) => state.appReducer.currentFloor);
   const polygonList = useAppSelector((state) => state.storageReducer.polygons);
-  const pathList = useAppSelector((state) => state.storageReducer.paths);
-  const graphList = useAppSelector((state) => state.storageReducer.graphList);
 
   const [startPolyId, setStartPolyId] = useState<string>();
   const [targetPolyId, setTargetPolyId] = useState<string>();
-  
-  
-  // ################################ HANDLER NAVIGATION ################################
+
   function HandleNavigation(): void {
-    if (startPolyId == null || targetPolyId == null) { alert('Please selecet start and target positions'); return; }
+    try {
+      if (startPolyId == null || targetPolyId == null) throw new Error('Please selecet start and target positions');
+      const startPoly = polygonList.find(f => f.properties.id == startPolyId);
+      const targetPoly = polygonList.find(f => f.properties.id == targetPolyId);
+      if (startPoly == null || targetPoly == null) throw new Error('Start or Target locations not found');
 
-    // x) Gelişmiş Nokta Geliştirmeleri 
-    //    1) Eklenen Gelişmiş Noktanın hangi katlarda bulunduğunu seçitrip seçilen katlar için kayıt atılmalı
-    //    2) Seçilen Kat Bilgilerine göre sadece aşağı, yukarı veya iki yönlü bilgisini girerek kaydet 
+      DesignGraph();
 
-    // a) Yol Geliştirmeleri
-    //    1) Yollardaki segmentleri 3 metre aralıklar ile böl  segmenet başlangıç ile bitiş arası 3 den fazla ise 
-    //      *) başlangıç düğümünden 3 metre ilerisine bir düğüm eklenir     
-    //      *) eklenen düğüm ile ana segmentin bitiş noktası arasında 3 den faza ise bir düğüm daha eklenir
+      const nearestNodeToStart = FindNearestNode(startPoly);
+      const nearestNodeToTarget = FindNearestNode(targetPoly);
+      
+      const tempRouteList: Route[] = [];
+      // 1) İki konum da aynı katta ise 
+      if (startPoly.properties.floor == targetPoly.properties.floor){
+        const route = FindShortestPath(nearestNodeToStart.coordinate, nearestNodeToTarget.coordinate, currentFloor!.index);
+        
+        tempRouteList.push({
+          id: e7(), 
+          floor: startPoly.properties.floor,
+          path: route
+        })
+      }
+      // 2) Başlangıç konumu üstte veya aşağıda ise
+      else{
+        const direction = startPoly.properties.floor > targetPoly.properties.floor;
+        
+        const floorDiff = direction ? targetPoly.properties.floor - startPoly.properties.floor :  startPoly.properties.floor - targetPoly.properties.floor;
+        const nearestAdvancedPoint = direction ? FindNearestAdvancedPoint(startPoly, targetPoly, "down") : FindNearestAdvancedPoint(startPoly, targetPoly, "up");
+        
+
+        for (let index = 0; index < floorDiff; index++) {
+          if (index == 0) { // Başlangıç Konumunun Bullunduğu Katı
+            const _floorIndex = startPoly.properties.floor;
+            const route = FindShortestPath(nearestNodeToStart.coordinate, nearestAdvancedPoint.geometry.coordinates, _floorIndex);
+            
+            tempRouteList.push({
+              id: e7(), 
+              floor: _floorIndex,
+              path: route
+            })
+          }
+          else if (floorDiff - index > 1){ // Ara Kat
+            // Todo: Arak Katlar için Görselleştirme Eklenmeli
+          }
+          else { // Hedef Konumun Bullunduğu Kat
+            const _floorIndex = targetPoly.properties.floor;
+            const route = FindShortestPath(nearestNodeToTarget.coordinate, nearestAdvancedPoint.geometry.coordinates, _floorIndex);
+            
+            tempRouteList.push({
+              id: e7(), 
+              floor: _floorIndex,
+              path: route
+            })
+          }
+        }
+      }
+      console.log("TEMP => ", tempRouteList)
+      dispatch(setRoutes(tempRouteList));
+    }
+    catch (error) {
+      dispatch(showAlertSuccess({ message: (error as Error).message }));
+    }
+  }
+
+  // function CreateNavigationRoute(geoJson: LineStringGeoJson, layer: CustomLayer, _id: string, floor: number, drawnItemsRoute: L.FeatureGroup<any>) {
+  //   (geoJson as LineStringGeoJson).properties = {
+  //     layerId: (layer as any)._leaflet_id,
+  //     id: _id,
+  //     floor: floor,
+  //     name: 'Yol',
+  //     popupContent: `Yol Bilgisi, Kat:${floor} ID:${_id}`,
+  //   };
+  //   const _newPathList = [...store.getState().storageReducer.paths, geoJson];
+  //   store.dispatch(addRoutePath(geoJson as LineStringGeoJson));
+  // }
+
+  // function CreateNavigationRoute(geoJson: AdvancedPointGeoJson, layer: CustomLayer, _id: string, floor: number, drawnItems: L.FeatureGroup<any>) {
+  //   drawnItems.addLayer(layer);
+  //   geoJson.properties = {
+  //     layerId: (layer as any)._leaflet_id,
+  //     id: _id,
+  //     floor: 404, //currentFloorRef.current!.index,
+  //     name: 'Gelişmiş Nokta',
+  //     popupContent: `Gelişmiş Nokta Bilgisi, Kat:${floor} ID:${_id}`,
+  //   };
+  //   store.dispatch(addAdvancedPoint(geoJson as AdvancedPointGeoJson));
+  // }
   
-    // b) Navigasyon Geliştirmeleri
-    //    1) Sorgulayacağın iki konum aynı katta mı diye kontrol et
-    //      *) Aynı Katta Değilse Aynı Şekilde işlemler devam etsin
-
-    //      *) Farklı Katta ise 
-    //      **) Başlangıç Yukarıda ise
-    //      ****) en yakın advancedpointi bul aşağı yönü bulunan
-    //      **) Başlangıç Aşağıda ise
-    //      ****) en yakın advancedpointi bul yukarı yönü bulunan 
-    //      **) başlangıç konumunun buldunduğu noktadan en yakın gelişmiş noktaya  FindShortestPath Fonksiyonunu ile yol çiz
-    //      **) birsonraki konumunun buldunduğu kat hedef ile aynı değilse
-    //      ****) aşağı yölü ise katı bir azaltıp veya tam tersi, birsonraki konumunun(Bir önceki katın gelişmiş noktası) buldunduğu noktadan en yakın gelişmiş noktaya  FindShortestPath Fonksiyonunu ile yol çiz
-    //      **) birsonraki konumunun buldunduğu kat hedef ile aynı ise
-    //      ****)  hedef konum ile gelinen gelişmiş noktra arasında FindShortestPath Fonksiyonunu ile yol çiz
-     
-    //    2) Başlangıç ve Hedef Konum arasındaki her kat için çizim yapman gerkiyor eğer katlar farklı ise
-    //      *) katlar arası geçiş yapraken drawnItemsRoute de kullanılacak şekilde geliştirmeler Floor.tsx içine yazılmalı 
-    //      *) katlar arası geçiş yapraken drawnItemsRoute de kullanılacak şekilde geliştirmeler Floor.tsx içine yazılmalı 
-
-    FindIntersections(pathList, drawnItems!);
-    DesignGraph(graphList);
-    
-    const nearestNodeToEnd = FindNearestNode(targetPolyId);
-    const nearestNodeToStart = FindNearestNode(startPolyId);
-    
-    const route = FindShortestPath(nearestNodeToStart.coordinate, nearestNodeToEnd.coordinate, currentFloor!.index);
-
-    var _cordsLine: L.LatLngExpression[] = [];
-    route.map(([lng, lat]) => _cordsLine.push({lat: lat, lng: lng}));
-    drawnItemsRoute!.addLayer(
-      L.polyline(_cordsLine, {
-        color: 'orange',
-      })
-    );
-  }
-
-  function FindNearestNode(polygonId: string): Node {
-
-    const polygon = polygonList.find((p) => p.properties.id == polygonId);
-    if (polygon == null) {
-      throw new Error('Polygon colud not found on finding nearest node');
-    }
-    if (polygon.properties.entrance == null) {
-      throw new Error('Entrance poin colud not found in polygon on finding nearest node');
-    }
-    const cordinate = polygon.properties.entrance.geometry.coordinates;
-
-    let nearestNode: Node | undefined = undefined;
-    let minDistance = Infinity;
-
-    var _graphList = store.getState().storageReducer.graphList;
-
-    var graphData = _graphList.find((f) => f.floor == polygon.properties.floor);
-    if (graphData == null) {
-      throw new Error('Graph could not found by floor value in nearest node calculation');
-    }
-    graphData.nodes.map((n) => {
-      const dist = turf.distance(turf.point(cordinate), turf.point(n.coordinate), {
-        units: 'meters',
-      });
-      if (dist < minDistance) {
-        nearestNode = n;
-        minDistance = dist;
-      }
-    });
-
-    if (nearestNode == undefined) {
-      throw new Error('Nearest node could not found in nearest node calculation');
-    }
-    return nearestNode;
-  }
-
-  function FindShortestPath(startCordinate: Position, targetCordinate: Position, floor: number): Position[] {
-    var _graphList = store.getState().storageReducer.graphList;
-
-    const graphData = _graphList.find((f) => f.floor == floor);
-    if (graphData == null) {
-      throw new Error('Could not found graphdata after filter by floor value on finding shortest path!');
-    }
-
-    const startCord = JSON.stringify(startCordinate);
-    const targetCord = JSON.stringify(targetCordinate);
-
-    const path = alg.dijkstra(graphData.graphGraphLib, startCord);
-
-    const route: string[] = [];
-    let current = targetCord;
-    
-    while (current !== startCord) {
-      if (!path[current].predecessor) {
-        throw new Error('Hedefe ulaşmak mümkün değil!');
-      }
-      // [target, before of last cord, ...] (hedef noktadan başlayıp bir öncekileri diziye attar başlangıca ulaşınca işlem biter)
-      route.unshift(current);
-      current = path[current].predecessor;
-    }
-
-    route.unshift(startCord);
-
-    const data: number[][] = route.map((i) => JSON.parse(i));
-    return data;
-  }
-
   function HandleClear(): void {
-    if (drawnItemsRoute == null) {
-      alert('DrawnItesm Route not found');
-      return;
+    try {
+      ClearRoutes(drawnItemsRoute);
     }
-    ClearRoutes(drawnItemsRoute);
+    catch (error) {
+      dispatch(showAlertError({ message: (error as Error).message }));
+    }
   }
 
   return (
@@ -156,9 +126,7 @@ export default function NavigationController() {
         <FormGroup>
           <Form.Label>Başlangıç Konum</Form.Label>
           <Form.Select value={startPolyId} onChange={(e) => setStartPolyId(e.target.value)}>
-            {polygonList != null &&
-              drawnItems != null &&
-              polygonList.map((poly) => (
+            {polygonList != null && drawnItems != null && polygonList.map((poly) => (
                 <option key={poly.properties.id} value={poly.properties.id}>
                   {poly.properties.name}
                 </option>
@@ -168,9 +136,7 @@ export default function NavigationController() {
         <FormGroup>
           <Form.Label>Hedef Konum</Form.Label>
           <Form.Select value={targetPolyId} onChange={(e) => setTargetPolyId(e.target.value)}>
-            {polygonList != null &&
-              drawnItems != null &&
-              drawnItemsRoute != null &&
+            {polygonList != null && drawnItems != null && drawnItemsRoute != null &&
               polygonList.map((poly) => (
                 <option key={poly.properties.id} value={poly.properties.id}>
                   {poly.properties.name}

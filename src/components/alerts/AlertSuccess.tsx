@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { closeAlertSuccess } from '../../redux/reducers/alertSlice';
 import { Modal } from 'react-bootstrap';
-import { AiFillCheckCircle } from 'react-icons/ai';
+import { FaCircleCheck } from 'react-icons/fa6';
 export default function AlertSuccess(): React.JSX.Element {
   const dispatch = useAppDispatch();
 
@@ -26,11 +26,14 @@ export default function AlertSuccess(): React.JSX.Element {
   return (
     <Modal show={_showStatus} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Modal heading</Modal.Title>
+        <Modal.Title>
+          <FaCircleCheck size={45} color="#26A560" />
+        </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <AiFillCheckCircle size={38} color="#26A560" />
-        {_message}
+      <Modal.Body className='p-4'>
+        <h4 className='text-center'>
+          {_message}
+        </h4>
       </Modal.Body>
     </Modal>
   );

@@ -9,7 +9,7 @@ interface StateUI {
 };
 
 const initialState: StateUI = {
-    isEntrancePointAdded: false,
+    isEntrancePointAdded: true,
     currentFloor: undefined
 }
 

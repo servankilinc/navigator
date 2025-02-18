@@ -16,7 +16,6 @@ export default function AlertError(): React.JSX.Element {
       setTimeout(() => {
         dispatch(closeAlertError());
         if (_callback != undefined) {
-          console.log('code-1 = ');
           _callback();
         }
       }, _timeOut);
@@ -27,11 +26,14 @@ export default function AlertError(): React.JSX.Element {
   return (
     <Modal show={_showStatus} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Modal heading</Modal.Title>
+        <Modal.Title>
+          <FaTriangleExclamation size={38} color="#dc2626"/>
+        </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <FaTriangleExclamation size={38} color="#dc2626" />
-        {_message}
+      <Modal.Body className='p-4'>
+        <h4 className='text-center'>
+          {_message}
+        </h4>
       </Modal.Body>
     </Modal>
   );

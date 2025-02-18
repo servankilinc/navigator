@@ -13,6 +13,8 @@ import Graph from './models/Graph';
 import Paths from './components/Paths';
 import AdvancedPoints from './components/AdvancedPoints';
 import NavigationController from './components/NavigationController';
+import AlertSuccess from './components/alerts/AlertSuccess';
+import AlertError from './components/alerts/AlertError';
 
 function App(): React.JSX.Element {
   const currentFloor = useAppSelector((state) => state.appReducer.currentFloor);
@@ -30,26 +32,28 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    // <Container>
-    <Row>
-      <Col lg={2} >
-        <Stack gap={4}>
-          <Floors />
-          <Polygons />
-          <Paths />
-        </Stack>
-      </Col>
-      <Col lg={8} >
-        {currentFloor != null && <Map />}
-      </Col>
-      <Col lg={2} >
-        <Stack gap={4}>
-          <AdvancedPoints />
-          <NavigationController />
-        </Stack>
-      </Col>
-    </Row>
-    // </Container>
+    <>
+      <Row>
+        <Col lg={2} >
+          <Stack gap={4}>
+            <Floors />
+            <Polygons />
+            <Paths />
+          </Stack>
+        </Col>
+        <Col lg={8} >
+          {currentFloor != null && <Map />}
+        </Col>
+        <Col lg={2} >
+          <Stack gap={4}>
+            <AdvancedPoints />
+            <NavigationController />
+          </Stack>
+        </Col>
+      </Row>
+      <AlertSuccess />
+      <AlertError />
+    </>
   );
 }
 

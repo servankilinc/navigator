@@ -1,31 +1,39 @@
-import * as L from 'leaflet';
 import * as turf from '@turf/turf';
-import { FeatureCollection, GeoJsonProperties, Point, Position } from 'geojson';
-import LineStringGeoJson from '../models/Features/LineStringGeoJson';
+import { alg, Graph as gGraph } from 'graphlib';
+import { Position } from 'geojson';
 import { store } from '../redux/store';
-import { setEdgeListToGraph, setgGraphToGraph, setNodeListToGraph, setPathCoordinates } from '../redux/reducers/storageSlice';
-import Graph from '../models/Graph';
-import Edge from '../models/Edge';
 import Node from '../models/Node';
-import { Graph as gGraph } from 'graphlib';
+import { designGraphList } from '../redux/reducers/storageSlice';
+import { DesignGraphModel } from '../models/UIModels/DesignGraphListModel';
+import PolygonGeoJson from '../models/Features/PolygonGeoJson';
+import { AdvancedPointDirectionTypesEnums } from '../models/UIModels/AdvancedPointDirectionTypes';
+import AdvancedPointGeoJson from '../models/Features/AdvancedPointGeoJson';
 
-export function DesignGraph(graphList: Graph[]): void {
+export function DesignGraph(): void
+{
+  const tempArray: DesignGraphModel[] = [];
+ 
+  const graphList = store.getState().storageReducer.graphList;
   graphList.map((graphData) => {
     var _pathList = store.getState().storageReducer.paths;
-    var floorPaths = _pathList.filter((f) => f.properties.floor == graphData.floor);
-    if (floorPaths == null) {
-      return;
-    }
-    const tempEdgeArray: Edge[] = [];
-    const tempNodeArray: Node[] = [];
 
-    // set nodes
+    var floorPaths = _pathList.filter((f) => f.properties.floor == graphData.floor);
+    if (floorPaths == null) return;
+
+    const floorTempArray: DesignGraphModel ={
+      floor: graphData.floor,
+      edges: [],
+      nodes: [],
+      gGraph: new gGraph()
+    } 
+
+    // 1) **************** KEEP NODES ****************
     floorPaths.forEach((_path) => {
-      var index = tempNodeArray.length;
+      var index = floorTempArray.nodes.length;
       _path.geometry.coordinates.map((cord) => {
-        var isExist = tempNodeArray.some((n) => n.coordinate[0] == cord[0] && n.coordinate[1] == cord[1]);
+        var isExist = floorTempArray.nodes.some((n) => n.coordinate[0] == cord[0] && n.coordinate[1] == cord[1]);
         if (isExist == false) {
-          tempNodeArray.push({
+          floorTempArray.nodes.push({
             id: index,
             coordinate: cord,
           });
@@ -34,7 +42,7 @@ export function DesignGraph(graphList: Graph[]): void {
       });
     });
 
-    // set edges
+    // 2) **************** KEEP EDGES ****************
     floorPaths.forEach((_path) => {
       const coordinates = _path.geometry.coordinates;
       for (let i = 0; i < coordinates.length - 1; i++) {
@@ -46,7 +54,7 @@ export function DesignGraph(graphList: Graph[]): void {
         const source = JSON.stringify(sourceCoordinate);
         const target = JSON.stringify(targetCoordinate);
 
-        tempEdgeArray.push({
+        floorTempArray.edges.push({
           source: source,
           target: target,
           weight: distance,
@@ -55,7 +63,7 @@ export function DesignGraph(graphList: Graph[]): void {
         });
 
         // Çift yönlü bağlantı
-        tempEdgeArray.push({
+        floorTempArray.edges.push({
           source: target,
           target: source,
           weight: distance,
@@ -64,203 +72,102 @@ export function DesignGraph(graphList: Graph[]): void {
         });
       }
     });
-    store.dispatch(setEdgeListToGraph({ floor: graphData.floor, edges: tempEdgeArray }));
-    store.dispatch(setNodeListToGraph({ floor: graphData.floor, nodes: tempNodeArray }));
 
-    var _gGraph = new gGraph();
-    tempEdgeArray.forEach((edge) => {
-      _gGraph.setNode(edge.source);
-      _gGraph.setNode(edge.target);
-      _gGraph.setEdge(edge.source, edge.target, edge.weight);
+    floorTempArray.edges.forEach((edge) => {
+      floorTempArray.gGraph.setNode(edge.source);
+      floorTempArray.gGraph.setNode(edge.target);
+      floorTempArray.gGraph.setEdge(edge.source, edge.target, edge.weight);
     });
-    store.dispatch(setgGraphToGraph({ floor: graphData.floor, graph: _gGraph }));
+
+    tempArray.push(floorTempArray);
   });
+
+  store.dispatch(designGraphList({updateModels: tempArray}));
 }
 
-// kesişim noktalarını yoll çizgilerine sanki birer node'muş gibi ekler
-export function FindIntersections(pathList: LineStringGeoJson[], drawnItems: L.FeatureGroup<any>): void {
-  pathList.map((path1) => {
-    pathList
-      .filter((f) => path1.properties.floor == f.properties.floor && path1.properties.id != f.properties.id)
-      .map((path2) => {
-        const linePath1 = turf.lineString(path1.geometry.coordinates);
-        const linePath2 = turf.lineString(path2.geometry.coordinates);
 
-        const intersect = turf.lineIntersect(linePath1, linePath2);
+export function FindNearestNode(polygon: PolygonGeoJson): Node
+{
+  if (polygon.properties.entrance == null) throw new Error('Entrance poin colud not found in polygon on finding nearest node');
 
-        if (intersect.features.length > 0) {
-          ConnectIntersections(intersect, path1, path2, drawnItems);
-        } else {
-          CheckBufferIntersection(path1, path2, drawnItems);
-        }
-      });
+  const cordinate = polygon.properties.entrance.geometry.coordinates;
+
+  let nearestNode: Node | undefined = undefined;
+  let minDistance = Infinity;
+
+  var _graphList = store.getState().storageReducer.graphList;
+  var graphData = _graphList.find((f) => f.floor == polygon.properties.floor);
+  if (graphData == null) throw new Error('Graph could not found by floor value in nearest node calculation');
+
+  graphData.nodes.map((n) => {
+    const dist = turf.distance(turf.point(cordinate), turf.point(n.coordinate), { units: 'meters' });
+    if (dist < minDistance) {
+      nearestNode = n;
+      minDistance = dist;
+    }
   });
+
+  if (nearestNode == undefined) throw new Error('Nearest node could not found in nearest node calculation');
+
+  return nearestNode;
 }
 
-function ConnectIntersections(
-  intersect: FeatureCollection<Point, GeoJsonProperties>,
-  path1: LineStringGeoJson,
-  path2: LineStringGeoJson,
-  drawnItems: L.FeatureGroup<any>
-) {
-  const coordinateListPath1 = path1.geometry.coordinates;
-  const coordinateListPath2 = path2.geometry.coordinates;
-
-  for (let i = 0; i < intersect.features.length; i++) {
-    var cordinate = intersect.features[i].geometry.coordinates;
-
-    var isExistOnPath1 = coordinateListPath1.some((c) => c[0] == cordinate[0] && c[1] == cordinate[1]);
-    var isExistOnPath2 = coordinateListPath2.some((c) => c[0] == cordinate[0] && c[1] == cordinate[1]);
-    if (isExistOnPath1 == true && isExistOnPath2 == true) {
-      continue;
+      
+export function FindNearestAdvancedPoint(startPolygon: PolygonGeoJson, targetPoly: PolygonGeoJson, direction: "down" | "up"): AdvancedPointGeoJson
+{
+  const advancedPoints = store.getState().storageReducer.advancedPoints;
+  if (advancedPoints == null) throw new Error("There is no any advancedpoint for navigation");
+  
+  // 1) sorgulanmak istenen lokasyonun bulunduğu kattaki gelişmiş noktalardan itenen yönlü olanları ve hedef konumun bulunduğu kata erişilebilen noktaları filtrele
+  const filteredAdvancedPointList = advancedPoints.filter(f => 
+    f.properties.floor == startPolygon.properties.floor &&
+    f.properties.directionType != (direction == "down" ? AdvancedPointDirectionTypesEnums.down : AdvancedPointDirectionTypesEnums.up) &&
+    advancedPoints.some(x => x.properties.groupId == f.properties.groupId && x.properties.floor == targetPoly.properties.floor)
+  );
+  
+  
+  let nearestAp: AdvancedPointGeoJson | undefined = undefined;
+  let minDistance = Infinity;
+  
+  // 2) en yakın gelişmiş noktayı bul (groupId'si aynı olanlar üzerinden erişilirliği kontrol edebilirsin)  
+  filteredAdvancedPointList.map((ap) => {
+    const dist = turf.distance(turf.point(startPolygon.properties.entrance?.geometry.coordinates!), turf.point(ap.geometry.coordinates), { units: 'meters' });
+    if (dist < minDistance) {
+      nearestAp = ap;
+      minDistance = dist;
     }
+  });
 
-    var _continue = true;
-    for (let k = 0; _continue && k < coordinateListPath1.length - 1; k++) {
-      for (let m = 0; _continue && m < coordinateListPath2.length - 1; m++) {
-        const segment1 = turf.lineString([coordinateListPath1[k], coordinateListPath1[k + 1]]);
-        const segment2 = turf.lineString([coordinateListPath2[m], coordinateListPath2[m + 1]]);
-        const intersectSegment = turf.lineIntersect(segment1, segment2);
+  if (nearestAp == undefined) throw new Error('Nearest advanced point could not found in nearest ap calculation');
 
-        // segmentler arasında kesişim var mı
-        if (intersectSegment.features.length > 0) {
-          if (!isExistOnPath1) {
-            const tempCords = [...coordinateListPath1];
-            tempCords.splice(k + 1, 0, cordinate);
-            store.dispatch(setPathCoordinates({ pathId: path1.properties.id, coordinates: tempCords }));
-          }
-          if (!isExistOnPath2) {
-            const tempCords = [...coordinateListPath2];
-            tempCords.splice(m + 1, 0, cordinate);
-            store.dispatch(setPathCoordinates({ pathId: path2.properties.id, coordinates: tempCords }));
-          }
-
-          drawnItems.addLayer(
-            L.circle([cordinate[1], cordinate[0]], {
-              color: '#000',
-              fillColor: '#f03',
-              fillOpacity: 0.5,
-              radius: 5,
-            })
-          );
-
-          _continue = false;
-        }
-      }
-    }
-  }
+  return nearestAp;
 }
 
-function CheckBufferIntersection(path1: LineStringGeoJson, path2: LineStringGeoJson, drawnItems: L.FeatureGroup<any>): void {
-  // ***** kesişim olmaması durumunda *****
-  // 1) tampon bölgeler ile tekrar kesişimi kontrol et
-  // 2) eğer kesişim olursa kesişimin üzerinde olduğu segment'te kesişim noktası düğüm olarak eklenir
-  // 3) diğer segmentin kesişime neden olan yakın düğümünün konumu kesişim noktası olarak düzenlenir
 
-  const coordinateListPath1 = path1.geometry.coordinates;
-  const coordinateListPath2 = path2.geometry.coordinates;
+export function FindShortestPath(startCordinate: Position, targetCordinate: Position, floor: number): Position[]
+{
+  var _graphList = store.getState().storageReducer.graphList;
+  const graphData = _graphList.find((f) => f.floor == floor);
+  if (graphData == null) throw new Error('Could not found graphdata after filter by floor value on finding shortest path!');
 
-  const tolerance = 3;
+  const startCord = JSON.stringify(startCordinate);
+  const targetCord = JSON.stringify(targetCordinate);
 
-  var _continue = true;
-  for (let k = 0; _continue && k < coordinateListPath1.length - 1; k++) {
-    for (let m = 0; _continue && m < coordinateListPath2.length - 1; m++) {
-      const segment1 = turf.lineString([coordinateListPath1[k], coordinateListPath1[k + 1]]);
-      const segment2 = turf.lineString([coordinateListPath2[m], coordinateListPath2[m + 1]]);
+  const path = alg.dijkstra(graphData.graphGraphLib, startCord);
 
-      const buffer1 = turf.buffer(segment1, tolerance, { units: 'meters' });
-      const buffer2 = turf.buffer(segment2, tolerance, { units: 'meters' });
-      if (buffer1 == null || buffer2 == null) {
-        alert('Buffer is coming undefined on buffer checking');
-        continue;
-      }
+  const route: string[] = [];
+  let current = targetCord;
+  
+  while (current !== startCord) {
+    if (!path[current].predecessor) throw new Error('Hedefe ulaşmak mümkün değil!');
 
-      var isInterSect = turf.booleanIntersects(buffer1, buffer2);
-      if (isInterSect == false) {
-        continue;
-      }
-
-      const intersectPoly = turf.intersect(turf.featureCollection([buffer1, buffer2]));
-      if (intersectPoly == null) {
-        alert('Intersection bufer as a Polygon is coming undefined on buffer checking');
-        continue;
-      }
-
-      if (intersectPoly.geometry.coordinates.length > 0) {
-        var med = Math.floor(intersectPoly.geometry.coordinates[0].length / 2);
-        var cordinate: Position | Position[] = intersectPoly.geometry.coordinates[0][med] as Position;
-
-        var isExistOnPath1 = coordinateListPath1.some((c) => c[0] == cordinate[0] && c[1] == cordinate[1]);
-        var isExistOnPath2 = coordinateListPath2.some((c) => c[0] == cordinate[0] && c[1] == cordinate[1]);
-
-        var isFirstSegmentResizing = true; // kesişim noktasına en yakın düğüme sahip segment bulmak için
-        var indexNearestNodeToIntersection: number | undefined = undefined; // kesişim noktasına en yakın düğümün index değeri
-        var minDistance = 0;
-        for (var x = 0; x < 2; x++) {
-          var _dist = turf.distance(
-            turf.point([coordinateListPath1[k + x][0], coordinateListPath1[k + x][1]]),
-            turf.point([cordinate[0], cordinate[1]])
-          );
-          if (minDistance == 0 || minDistance > _dist) {
-            minDistance = _dist;
-            indexNearestNodeToIntersection = k + x;
-          }
-        }
-        for (var x = 0; x < 2; x++) {
-          var _dist = turf.distance(
-            turf.point([coordinateListPath2[m + x][0], coordinateListPath2[m + x][1]]),
-            turf.point([cordinate[0], cordinate[1]])
-          );
-          if (minDistance == 0 || minDistance > _dist) {
-            minDistance = _dist;
-            isFirstSegmentResizing = false;
-            indexNearestNodeToIntersection = m + x;
-          }
-        }
-
-        if (indexNearestNodeToIntersection == undefined) {
-          alert('indexNearestNodeToIntersection could not calculated');
-          continue;
-        }
-
-        if (!isExistOnPath1) {
-          if (isFirstSegmentResizing) {
-            // ilk segmentin düğüm noka kordinatı değişmeli
-            const tempCords = [...coordinateListPath1];
-            tempCords[indexNearestNodeToIntersection] = cordinate;
-            store.dispatch(setPathCoordinates({ pathId: path1.properties.id, coordinates: tempCords }));
-          } else {
-            // ilk segmentin arasına kesişim noktası girmeli
-            const tempCords = [...coordinateListPath1];
-            tempCords.splice(k + 1, 0, cordinate);
-            store.dispatch(setPathCoordinates({ pathId: path1.properties.id, coordinates: tempCords }));
-          }
-        }
-        if (!isExistOnPath2) {
-          if (isFirstSegmentResizing == false) {
-            // ikinci segmentin düğüm noka kordinatı değişmeli
-            const tempCords = [...coordinateListPath2];
-            tempCords[indexNearestNodeToIntersection] = cordinate;
-            store.dispatch(setPathCoordinates({ pathId: path2.properties.id, coordinates: tempCords }));
-          } else {
-            // ikinci segmentin arasına kesişim noktası girmeli
-            const tempCords = [...coordinateListPath2];
-            tempCords.splice(m + 1, 0, cordinate);
-            store.dispatch(setPathCoordinates({ pathId: path2.properties.id, coordinates: tempCords }));
-          }
-        }
-
-        drawnItems!.addLayer(
-          L.circle([cordinate[1], cordinate[0]], {
-            color: '#000',
-            fillColor: '#f03',
-            fillOpacity: 0.5,
-            radius: 5,
-          })
-        );
-
-        _continue = false;
-      }
-    }
+    // [target, before of last cord, ...] (hedef noktadan başlayıp bir öncekileri diziye attar başlangıca ulaşınca işlem biter)
+    route.unshift(current);
+    current = path[current].predecessor;
   }
+
+  route.unshift(startCord);
+
+  const data: number[][] = route.map((i) => JSON.parse(i));
+  return data;
 }

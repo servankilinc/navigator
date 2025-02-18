@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import e7 from '../../scripts/idGenerator';
 import Floor from '../../models/Floor';
 import Graph from '../../models/Graph';
 import PolygonGeoJson from '../../models/Features/PolygonGeoJson';
@@ -10,20 +11,19 @@ import UpdatePolygonCoordinatesModel from '../../models/UIModels/UpdatePolygonCo
 import { UpdatePointCoordinatesModel } from '../../models/UIModels/UpdatePointCoordinatesModel';
 import UpdatePathCoordinatesModel from '../../models/UIModels/UpdatePathCoordinatesModel';
 import UpdateAdvancedPointInfoModel from '../../models/UIModels/UpdateAdvancedPointInfoModel';
-import AddNodeToGraphModel from '../../models/UIModels/AddNodeToGraphModel';
-import AddEdgeToGraphModel from '../../models/UIModels/AddEdgeToGraphModel';
-import UpdateGraphLibToGraphModel from '../../models/UIModels/UpdateGraphLibToGraphModel';
-import { Graph as gGraph } from 'graphlib';
-import { AddNodeListToGraphModel } from '../../models/UIModels/AddNodeListToGraphModel';
-import { AddEdgeListToGraphModel } from '../../models/UIModels/AddEdgeListToGraphModel';
 import { AdvancedPointDirectionTypesEnums } from '../../models/UIModels/AdvancedPointDirectionTypes';
-import e7 from '../../scripts/idGenerator';
+import DesignGraphListModel from '../../models/UIModels/DesignGraphListModel';
+import { SplicePathCoordinatesModel } from '../../models/UIModels/SplicePathCoordinatesModel';
+import SetPathCoordinateLatLngModel from '../../models/UIModels/SetPathCoordinateLatLngModel';
+import Route from '../../models/Route';
 
 interface StateUI {
   floorList: Floor[];
   graphList: Graph[];
   polygons: PolygonGeoJson[];
   paths: LineStringGeoJson[];
+  // routeList: LineStringGeoJson[];
+  routeList: Route[];
   entrancePoints: EntrancePointGeoJson[];
   advancedPoints: AdvancedPointGeoJson[];
 }
@@ -143,54 +143,8 @@ const initialState: StateUI = {
         }
     }
 ],
-  paths: [
-    {
-        "type": "Feature",
-        "properties": {
-            "layerId": 178,
-            "id": "54279253-d3f3-4b9f-b922-4691b9a89f53",
-            "floor": 0,
-            "name": "Yol",
-            "popupContent": "Yol Bilgisi, Kat:0 ID:54279253-d3f3-4b9f-b922-4691b9a89f53"
-        },
-        "geometry": {
-            "type": "LineString",
-            "coordinates": [
-                [
-                    33.086234,
-                    39.090817
-                ],
-                [
-                    33.088144,
-                    39.08921
-                ]
-            ]
-        }
-    },
-    {
-        "type": "Feature",
-        "properties": {
-            "layerId": 192,
-            "id": "e9eec8b7-3307-4f7e-869d-890a7202824d",
-            "floor": 0,
-            "name": "Yol",
-            "popupContent": "Yol Bilgisi, Kat:0 ID:e9eec8b7-3307-4f7e-869d-890a7202824d"
-        },
-        "geometry": {
-            "type": "LineString",
-            "coordinates": [
-                [
-                    33.086052,
-                    39.089668
-                ],
-                [
-                    33.087629,
-                    39.090476
-                ]
-            ]
-        }
-    }
-],
+  paths: [],
+  routeList: [],
   entrancePoints: [
     {
         "type": "Feature",
@@ -249,6 +203,9 @@ export const storageSlice = createSlice({
     addPath: (state, action: PayloadAction<LineStringGeoJson>) => {
       state.paths = [...state.paths, action.payload];
     },
+    addRoute: (state, action: PayloadAction<Route>) => {
+      state.routeList = [...state.routeList, action.payload];
+    },
     addEntrancePoint: (state, action: PayloadAction<EntrancePointGeoJson>) => {
       state.entrancePoints = [...state.entrancePoints, action.payload];
     },
@@ -256,13 +213,6 @@ export const storageSlice = createSlice({
       state.advancedPoints = [...state.advancedPoints, action.payload];
     },
 
-
-    removeFloor: (state, action: PayloadAction<string>) => {
-      state.floorList = state.floorList.filter((floor) => floor.id !== action.payload);
-    },
-    removeGraph: (state, action: PayloadAction<number>) => {
-      state.graphList = state.graphList.filter((graph) => graph.floor !== action.payload);
-    },
     removePolygon: (state, action: PayloadAction<string>) => {
       state.polygons = state.polygons.filter((polygon) => polygon.properties.id !== action.payload);
     },
@@ -274,6 +224,15 @@ export const storageSlice = createSlice({
     },
     removeAdvancedPoint: (state, action: PayloadAction<string>) => {
       state.advancedPoints = state.advancedPoints.filter((ap) => ap.properties.id !== action.payload);
+    },
+
+    clearRoutes: (state) => {
+      state.routeList = [];
+    },
+
+    
+    setRoutes: (state, action: PayloadAction<Route[]>) => {
+      state.routeList = [...action.payload];
     },
 
     setEntrancePoinOfPolygon: (state, action: PayloadAction<EntrancePointGeoJson>) => {
@@ -338,6 +297,37 @@ export const storageSlice = createSlice({
       }
     },
 
+    splicePathCoordinates: (state, action: PayloadAction<SplicePathCoordinatesModel>) => {
+      const index = state.paths.findIndex((p) => p.properties.id === action.payload.pathId);
+      if(index == -1) return;
+
+      const tempCords = [...state.paths[index].geometry.coordinates];
+      tempCords.splice(action.payload.prevIndex, 0, action.payload.coordinate);
+
+      state.paths[index] = {
+        ...state.paths[index],
+        geometry: {
+          ...state.paths[index].geometry,
+          coordinates: tempCords,
+        },
+      };
+    },
+
+    setPathCoordinateLatLng: (state, action: PayloadAction<SetPathCoordinateLatLngModel>) => {
+      const index = state.paths.findIndex((p) => p.properties.id === action.payload.pathId);
+      if (index == -1) return;
+
+      const tempCords = [...state.paths[index].geometry.coordinates];
+      tempCords[action.payload.latLngIndex] = action.payload.coordinate;
+      state.paths[index] = {
+        ...state.paths[index],
+        geometry: {
+          ...state.paths[index].geometry,
+          coordinates: tempCords
+        },
+      };
+    },
+
     setEntrancePointCoordinates: (state, action: PayloadAction<UpdatePointCoordinatesModel>) => {
       const index = state.entrancePoints.findIndex((p) => p.properties.id === action.payload.id);
       if (index !== -1) {
@@ -378,6 +368,7 @@ export const storageSlice = createSlice({
             properties: {
               ...relatedAPoint.properties,
               id: e7(),
+              groupId: action.payload.id,
               floor: _floorIndex,
               name: action.payload.name,
               type: action.payload.type,
@@ -392,42 +383,17 @@ export const storageSlice = createSlice({
         ];
       }
     },
-
-    addNodeToGraph: (state, action: PayloadAction<AddNodeToGraphModel>) => {
-      state.graphList = state.graphList.map((graphData) =>
-        graphData.floor == action.payload.floor ? { ...graphData, nodes: [...graphData.nodes, action.payload.node] } : graphData
-      );
-    },
-
-    setNodeListToGraph: (state, action: PayloadAction<AddNodeListToGraphModel>) => {
-      state.graphList = state.graphList.map((graphData) =>
-        graphData.floor == action.payload.floor ? { ...graphData, nodes: [...action.payload.nodes] } : graphData
-      );
-    },
+ 
     
-    addEdgeToGraph: (state, action: PayloadAction<AddEdgeToGraphModel>) => {
-      state.graphList = state.graphList.map((graphData) =>
-        graphData.floor == action.payload.floor ? { ...graphData, edges: [...graphData.edges, action.payload.edge] } : graphData
-      );
-    },
-
-    setEdgeListToGraph: (state, action: PayloadAction<AddEdgeListToGraphModel>) => {
-      state.graphList = state.graphList.map((graphData) =>
-        graphData.floor == action.payload.floor ? { ...graphData, edges: [...action.payload.edges] } : graphData
-      );
-    },
-
-    setgGraphToGraph: (state, action: PayloadAction<UpdateGraphLibToGraphModel>) => {
-      state.graphList = state.graphList.map((graphData) =>
-        graphData.floor === action.payload.floor ? { ...graphData, graphGraphLib: action.payload.graph } : graphData
-      );
-    },
-
-    clearGraphByFloor: (state, action: PayloadAction<number>) => {
-      state.graphList = state.graphList.map((graphData) =>
-        graphData.floor === action.payload ? { ...graphData, edges: [], nodes: [], graphGraphLib: new gGraph() } : graphData
-      );
-    },
+    designGraphList: (state, action: PayloadAction<DesignGraphListModel>) => {
+      console.log("before design dispatch", state.graphList)
+      state.graphList = state.graphList.map((graphData) =>{
+        var newFloorGraphData = action.payload.updateModels.find(f => f.floor == graphData.floor);
+        if (newFloorGraphData == null) return { ...graphData };
+        return { ...graphData, nodes: [...newFloorGraphData.nodes], edges: [...newFloorGraphData.edges], graphGraphLib: newFloorGraphData.gGraph };
+      });
+      console.log("after design dispatch", state.graphList)
+    }
   },
 });
 
@@ -436,28 +402,26 @@ export const {
   addGraph,
   addPolygon,
   addPath,
+  addRoute,
   addEntrancePoint,
   addAdvancedPoint,
-  removeFloor,
-  removeGraph,
   removePolygon,
   removePath,
   removeEntrancePoint,
   removeAdvancedPoint,
+  clearRoutes,
+  setRoutes,
   setEntrancePoinOfPolygon,
   setEntrancePointCordsOfPolygon,
   setPolygonInfo,
   setPolygonCoordinates,
   setPathCoordinates,
+  splicePathCoordinates,
+  setPathCoordinateLatLng,
   setEntrancePointCoordinates,
   setAdvancedPointCoordinates,
   setAdvancedPointInfo,
-  addNodeToGraph,
-  setNodeListToGraph,
-  addEdgeToGraph,
-  setEdgeListToGraph,
-  setgGraphToGraph,
-  clearGraphByFloor
+  designGraphList,
 } = storageSlice.actions;
 
 export default storageSlice.reducer;
