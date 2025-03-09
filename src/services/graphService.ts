@@ -86,21 +86,17 @@ export function DesignGraph(): void
 }
 
 
-export function FindNearestNode(polygon: PolygonGeoJson): Node
+export function FindNearestNode(coordinate: Position, floor: number): Node
 {
-  if (polygon.properties.entrance == null) throw new Error('Entrance poin colud not found in polygon on finding nearest node');
-
-  const cordinate = polygon.properties.entrance.geometry.coordinates;
-
   let nearestNode: Node | undefined = undefined;
   let minDistance = Infinity;
 
   var _graphList = store.getState().storageReducer.graphList;
-  var graphData = _graphList.find((f) => f.floor == polygon.properties.floor);
+  var graphData = _graphList.find((f) => f.floor == floor);
   if (graphData == null) throw new Error('Graph could not found by floor value in nearest node calculation');
 
   graphData.nodes.map((n) => {
-    const dist = turf.distance(turf.point(cordinate), turf.point(n.coordinate), { units: 'meters' });
+    const dist = turf.distance(turf.point(coordinate), turf.point(n.coordinate), { units: 'meters' });
     if (dist < minDistance) {
       nearestNode = n;
       minDistance = dist;
@@ -112,19 +108,18 @@ export function FindNearestNode(polygon: PolygonGeoJson): Node
   return nearestNode;
 }
 
-      
+
 export function FindNearestAdvancedPoint(startPolygon: PolygonGeoJson, targetPoly: PolygonGeoJson, direction: "down" | "up"): AdvancedPointGeoJson
 {
   const advancedPoints = store.getState().storageReducer.advancedPoints;
   if (advancedPoints == null) throw new Error("There is no any advancedpoint for navigation");
-  
+
   // 1) sorgulanmak istenen lokasyonun bulunduğu kattaki gelişmiş noktalardan itenen yönlü olanları ve hedef konumun bulunduğu kata erişilebilen noktaları filtrele
   const filteredAdvancedPointList = advancedPoints.filter(f => 
     f.properties.floor == startPolygon.properties.floor &&
-    f.properties.directionType != (direction == "down" ? AdvancedPointDirectionTypesEnums.down : AdvancedPointDirectionTypesEnums.up) &&
+    f.properties.directionType == (direction == "down" ? AdvancedPointDirectionTypesEnums.down : AdvancedPointDirectionTypesEnums.up) &&
     advancedPoints.some(x => x.properties.groupId == f.properties.groupId && x.properties.floor == targetPoly.properties.floor)
   );
-  
   
   let nearestAp: AdvancedPointGeoJson | undefined = undefined;
   let minDistance = Infinity;
@@ -152,12 +147,10 @@ export function FindShortestPath(startCordinate: Position, targetCordinate: Posi
 
   const startCord = JSON.stringify(startCordinate);
   const targetCord = JSON.stringify(targetCordinate);
-
   const path = alg.dijkstra(graphData.graphGraphLib, startCord);
 
   const route: string[] = [];
   let current = targetCord;
-  
   while (current !== startCord) {
     if (!path[current].predecessor) throw new Error('Hedefe ulaşmak mümkün değil!');
 
@@ -165,7 +158,6 @@ export function FindShortestPath(startCordinate: Position, targetCordinate: Posi
     route.unshift(current);
     current = path[current].predecessor;
   }
-
   route.unshift(startCord);
 
   const data: number[][] = route.map((i) => JSON.parse(i));

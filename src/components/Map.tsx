@@ -9,7 +9,7 @@ import EntrancePointGeoJson from '../models/Features/EntrancePointGeoJson';
 import AdvancedPointGeoJson from '../models/Features/AdvancedPointGeoJson';
 import PolygonGeoJson from '../models/Features/PolygonGeoJson';
 import LineStringGeoJson from '../models/Features/LineStringGeoJson';
-import { setDrawnItems, setDrawnItemsRoute } from '../redux/reducers/mapSlice';
+import { setDrawnItems, setDrawnItemsRoute, setMap } from '../redux/reducers/mapSlice';
 import Floor from '../models/Floor';
 import ModalPolygonInfo from './ModalPolygonInfo';
 import ModalAdvencedPointInfo from './ModalAdvencedPointInfo';
@@ -78,7 +78,8 @@ function Map() {
       maxZoom: 25,
     }).setView([39.090142, 33.088293], 17);
     
-
+    dispatch(setMap(map));
+    //https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map);

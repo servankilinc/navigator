@@ -88,13 +88,6 @@ export function ShowOrHidePath(path: LineStringGeoJson, drawnItems:  L.FeatureGr
   }
 }
 
-export function ClearRoutes(drawnItemsRoute?:  L.FeatureGroup<any>): void {
-  if (drawnItemsRoute == null) throw new Error('DrawnItesm Route not found');
-  drawnItemsRoute.eachLayer(function (layer) {
-    drawnItemsRoute.removeLayer(layer);
-  });
-}
-
 
 // ############################## INTERSECTION METHODS ##############################
 

@@ -71,7 +71,7 @@ function Polygons() {
 
   return (
     <>
-      <ListGroup>
+      <ListGroup className="shadow">
         <ListGroup.Item className="bg-light text-primary fw-bold">Konum Listesi</ListGroup.Item>
         {polygonList != null &&
           drawnItems != null &&

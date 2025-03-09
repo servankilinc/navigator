@@ -11,9 +11,11 @@ import CustomLayer from '../models/Features/CustomLayer';
 import Floor from '../models/Floor';
 import Graph from '../models/Graph';
 import e7 from '../scripts/idGenerator';
+import { ShowRoute } from '../services/navigationService';
 
 function Floors() {
   const drawnItems = useAppSelector((state) => state.mapReducer.drawnItems);
+  const drawnItemsRoute = useAppSelector((state) => state.mapReducer.drawnItemsRoute);
 
   const currentFloor = useAppSelector((state) => state.appReducer.currentFloor);
 
@@ -22,6 +24,7 @@ function Floors() {
   const pathList = useAppSelector((state) => state.storageReducer.paths);
   const entrancePointList = useAppSelector((state) => state.storageReducer.entrancePoints);
   const advancedPointList = useAppSelector((state) => state.storageReducer.advancedPoints);
+  const routeList = useAppSelector((state) => state.storageReducer.routeList);
 
   const dispath = useAppDispatch();
 
@@ -36,7 +39,8 @@ function Floors() {
 
       dispath(addGraph(graphObj));
       dispath(addFloor(floorObj));
-    } else {
+    }
+    else {
       let indexArr = floorList.map((f) => f.index);
       let newIndex = Math.min(...indexArr) - 1;
       let id = e7();
@@ -58,6 +62,10 @@ function Floors() {
       if ((layer as CustomLayer).customProperties?.floor != nextFloor.index) {
         drawnItems!.removeLayer(layer);
       }
+    });
+
+    drawnItemsRoute!.eachLayer(function (layer) {
+      drawnItemsRoute!.removeLayer(layer);
     });
     
     polygonList
@@ -83,7 +91,12 @@ function Floors() {
       .map((path) => {
         ShowPath(path, drawnItems!);
       });
-
+      
+    routeList
+      .filter((f) => f.floor == nextFloor.index)
+      .map((route) => {
+        ShowRoute(route.path, drawnItemsRoute!);
+      });
   }
 
   return (

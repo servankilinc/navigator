@@ -34,7 +34,7 @@ export default function AdvancedPoints(): React.JSX.Element {
 
   return (
     <>
-      <ListGroup>
+      <ListGroup className="shadow">
         <ListGroup.Item className="bg-light text-primary fw-bold">Noktalar</ListGroup.Item>
         {advancedPoints != null &&
           drawnItems != null &&

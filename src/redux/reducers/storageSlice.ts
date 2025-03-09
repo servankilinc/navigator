@@ -22,7 +22,6 @@ interface StateUI {
   graphList: Graph[];
   polygons: PolygonGeoJson[];
   paths: LineStringGeoJson[];
-  // routeList: LineStringGeoJson[];
   routeList: Route[];
   entrancePoints: EntrancePointGeoJson[];
   advancedPoints: AdvancedPointGeoJson[];
@@ -31,158 +30,10 @@ interface StateUI {
 const initialState: StateUI = {
   floorList: [],
   graphList: [],
-  polygons: [
-    {
-        "type": "Feature",
-        "properties": {
-            "layerId": 130,
-            "id": "2d2170e4-ecbd-413e-a6d6-e1c9072d1e74",
-            "floor": 0,
-            "name": "Bina 1",
-            "popupContent": "Bina Bilgisi, İsim: Bina Kat:0 ID:2d2170e4-ecbd-413e-a6d6-e1c9072d1e74",
-            "entrance": {
-                "type": "Feature",
-                "properties": {
-                    "layerId": 140,
-                    "id": "3c8aaaa3-07fd-4f53-bfe5-13f046943c80",
-                    "floor": 0,
-                    "name": "Bina Girisi",
-                    "isEntrance": true,
-                    "polygonId": "2d2170e4-ecbd-413e-a6d6-e1c9072d1e74"
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        33.086256,
-                        39.090876
-                    ]
-                }
-            }
-        },
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [
-                        33.086449,
-                        39.091192
-                    ],
-                    [
-                        33.086138,
-                        39.090942
-                    ],
-                    [
-                        33.08646,
-                        39.090809
-                    ],
-                    [
-                        33.086835,
-                        39.091142
-                    ],
-                    [
-                        33.086449,
-                        39.091192
-                    ]
-                ]
-            ]
-        }
-    },
-    {
-        "type": "Feature",
-        "properties": {
-            "layerId": 158,
-            "id": "553321db-0b21-4edd-a6dd-70b545eee04a",
-            "floor": 0,
-            "name": "Bina 2",
-            "popupContent": "Bina Bilgisi, İsim: Bina Kat:0 ID:553321db-0b21-4edd-a6dd-70b545eee04a",
-            "entrance": {
-                "type": "Feature",
-                "properties": {
-                    "layerId": 166,
-                    "id": "56c53654-4e88-4839-a379-b3df80077d26",
-                    "floor": 0,
-                    "name": "Bina Girisi",
-                    "isEntrance": true,
-                    "polygonId": "553321db-0b21-4edd-a6dd-70b545eee04a"
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        33.085913,
-                        39.089627
-                    ]
-                }
-            }
-        },
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [
-                        33.085516,
-                        39.089543
-                    ],
-                    [
-                        33.085516,
-                        39.089785
-                    ],
-                    [
-                        33.085827,
-                        39.089826
-                    ],
-                    [
-                        33.08588,
-                        39.089502
-                    ],
-                    [
-                        33.085516,
-                        39.089543
-                    ]
-                ]
-            ]
-        }
-    }
-],
+  polygons: [],
   paths: [],
   routeList: [],
-  entrancePoints: [
-    {
-        "type": "Feature",
-        "properties": {
-            "layerId": 140,
-            "id": "3c8aaaa3-07fd-4f53-bfe5-13f046943c80",
-            "floor": 0,
-            "name": "Bina Girisi",
-            "isEntrance": true,
-            "polygonId": "2d2170e4-ecbd-413e-a6d6-e1c9072d1e74"
-        },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [
-                33.086256,
-                39.090876
-            ]
-        }
-    },
-    {
-        "type": "Feature",
-        "properties": {
-            "layerId": 166,
-            "id": "56c53654-4e88-4839-a379-b3df80077d26",
-            "floor": 0,
-            "name": "Bina Girisi",
-            "isEntrance": true,
-            "polygonId": "553321db-0b21-4edd-a6dd-70b545eee04a"
-        },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [
-                33.085913,
-                39.089627
-            ]
-        }
-    }
-],
+  entrancePoints: [],
   advancedPoints: [],
 };
 
@@ -212,6 +63,30 @@ export const storageSlice = createSlice({
     addAdvancedPoint: (state, action: PayloadAction<AdvancedPointGeoJson>) => {
       state.advancedPoints = [...state.advancedPoints, action.payload];
     },
+
+    setFloorList: (state, action: PayloadAction<Floor[]>) => {
+      state.floorList = [...action.payload];
+      state.floorList.sort((a, b) => b.index - a.index);
+    },
+    setGraphList: (state, action: PayloadAction<Graph[]>) => {
+      state.graphList = [...action.payload];
+    },
+    setPolygonList: (state, action: PayloadAction<PolygonGeoJson[]>) => {
+      state.polygons = [...action.payload];
+    },
+    setPathList: (state, action: PayloadAction<LineStringGeoJson[]>) => {
+      state.paths = [...action.payload];
+    },
+    setRouteList: (state, action: PayloadAction<Route[]>) => {
+      state.routeList = [...action.payload];
+    },
+    setEntrancePointList: (state, action: PayloadAction<EntrancePointGeoJson[]>) => {
+      state.entrancePoints = [...action.payload];
+    },
+    setAdvancedPointList: (state, action: PayloadAction<AdvancedPointGeoJson[]>) => {
+      state.advancedPoints = [...action.payload];
+    },
+
 
     removePolygon: (state, action: PayloadAction<string>) => {
       state.polygons = state.polygons.filter((polygon) => polygon.properties.id !== action.payload);
@@ -405,6 +280,13 @@ export const {
   addRoute,
   addEntrancePoint,
   addAdvancedPoint,
+  setFloorList,
+  setGraphList,
+  setPolygonList,
+  setPathList,
+  setRouteList,
+  setEntrancePointList,
+  setAdvancedPointList,
   removePolygon,
   removePath,
   removeEntrancePoint,
