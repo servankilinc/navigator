@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import AdvancedPointTypes, { AdvancedPointTypeEntries } from '../models/UIModels/AdvancedPointTypes';
+import AdvancedPointTypes, { AdvancedPointTypeEntries } from '../models/AdvancedPointTypes';
 import { setAdvancedPointInfo } from '../redux/reducers/storageSlice';
 import { HideAdvancedPointByLayer, ShowAdvancedPointByType } from '../services/advancedPointService';
 

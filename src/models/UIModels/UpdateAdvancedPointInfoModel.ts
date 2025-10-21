@@ -1,4 +1,4 @@
-import AdvancedPointTypes from "./AdvancedPointTypes";
+import AdvancedPointTypes from "../AdvancedPointTypes";
 
 export default interface UpdateAdvancedPointInfoModel{
   id: string,

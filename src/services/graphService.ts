@@ -6,7 +6,7 @@ import Node from '../models/Node';
 import { designGraphList } from '../redux/reducers/storageSlice';
 import { DesignGraphModel } from '../models/UIModels/DesignGraphListModel';
 import PolygonGeoJson from '../models/Features/PolygonGeoJson';
-import { AdvancedPointDirectionTypesEnums } from '../models/UIModels/AdvancedPointDirectionTypes';
+import { AdvancedPointDirectionTypesEnums } from '../models/AdvancedPointDirectionTypes';
 import AdvancedPointGeoJson from '../models/Features/AdvancedPointGeoJson';
 
 export function DesignGraph(): void

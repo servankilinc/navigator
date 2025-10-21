@@ -2,18 +2,9 @@ import React, { useEffect } from 'react';
 import { Button, Col, Row, Stack } from 'react-bootstrap';
 import { FaFileArrowUp } from 'react-icons/fa6';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
-import './App.css';
+import './styles/App.css';
 import { setCurrentFloor } from './redux/reducers/appSlice';
-import {
-  addFloor,
-  addGraph,
-  setAdvancedPointList,
-  setEntrancePointList,
-  setFloorList,
-  setGraphList,
-  setPathList,
-  setPolygonList,
-} from './redux/reducers/storageSlice';
+import { addFloor, addGraph, setAdvancedPointList, setEntrancePointList, setFloorList, setGraphList, setPathList, setPolygonList } from './redux/reducers/storageSlice';
 import e7 from './scripts/idGenerator';
 import Map from './components/Map';
 import Floors from './components/Floors';
@@ -82,7 +73,7 @@ function App(): React.JSX.Element {
 
   function SetDefaultData() {
     var id = e7();
-    let floorObj = new Floor(0, id, 'Giriş Katı');
+    let floorObj = new Floor(0, id, 'Kat 0');
     let graphObj = new Graph(0);
 
     dispatch(addGraph(graphObj));

@@ -25,7 +25,7 @@ export default function NavigationController(): React.JSX.Element {
         drawnItemsRoute!.removeLayer(layer);
       });
 
-      if (startPolyId == null || targetPolyId == null) throw new Error('Please selecet start and target positions');
+      if (startPolyId == null || targetPolyId == null) throw new Error('Please selecet start and target locations');
       
       const tempRouteList: Route[] = GenerateRoutes(startPolyId, targetPolyId);
 

@@ -150,7 +150,7 @@ function Map() {
     };
 
     if (layerType == 'marker') {
-      if ((polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) == false) throw new Error('Before adding a entrance point, you must add an building point');
+      if ((polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) == false) throw new Error('Before adding a entrance point, you have to add an building point');
       CreateEntrancePoint(geoJson as EntrancePointGeoJson, layer, _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
     }
     else if (layerType == 'circlemarker') {
@@ -160,7 +160,7 @@ function Map() {
       setShowAdvPointEdit(true);
     }
     else if (layerType == 'polygon') {
-      if (polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) throw new Error('Before adding a polygon, you must add an entrance point');
+      if (polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) throw new Error('Before adding a polygon, you have to add an entrance point');
 
       CreatePolygon(geoJson as PolygonGeoJson, layer, _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
 

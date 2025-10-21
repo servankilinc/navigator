@@ -13,7 +13,7 @@ import {
   setSketchOpacity,
   setSketchRotaion,
 } from '../redux/reducers/mapSlice';
-import ImageSettings from './ImageSettings/ImageSettings';
+import ImageSettings from './ImageSettings';
 import { showAlertError } from '../redux/reducers/alertSlice';
 import 'leaflet-imageoverlay-rotated';
 import { store } from '../redux/store';

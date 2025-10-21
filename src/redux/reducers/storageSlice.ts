@@ -11,7 +11,7 @@ import UpdatePolygonCoordinatesModel from '../../models/UIModels/UpdatePolygonCo
 import { UpdatePointCoordinatesModel } from '../../models/UIModels/UpdatePointCoordinatesModel';
 import UpdatePathCoordinatesModel from '../../models/UIModels/UpdatePathCoordinatesModel';
 import UpdateAdvancedPointInfoModel from '../../models/UIModels/UpdateAdvancedPointInfoModel';
-import { AdvancedPointDirectionTypesEnums } from '../../models/UIModels/AdvancedPointDirectionTypes';
+import { AdvancedPointDirectionTypesEnums } from '../../models/AdvancedPointDirectionTypes';
 import DesignGraphListModel from '../../models/UIModels/DesignGraphListModel';
 import { SplicePathCoordinatesModel } from '../../models/UIModels/SplicePathCoordinatesModel';
 import SetPathCoordinateLatLngModel from '../../models/UIModels/SetPathCoordinateLatLngModel';

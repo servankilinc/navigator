@@ -1,5 +1,3 @@
-
-
 export class ResizePositionOfCornerModel {
   id!: string;
   index!: number;

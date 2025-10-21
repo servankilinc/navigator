@@ -1,5 +1,5 @@
-import { AdvancedPointDirectionTypesEnums } from "../UIModels/AdvancedPointDirectionTypes";
-import AdvancedPointTypes from "../UIModels/AdvancedPointTypes";
+import { AdvancedPointDirectionTypesEnums } from "../AdvancedPointDirectionTypes";
+import AdvancedPointTypes from "../AdvancedPointTypes";
 
 export default interface AdvancedPointGeoJson extends GeoJSON.Feature<GeoJSON.Point> {
   properties: {

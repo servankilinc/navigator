@@ -1,7 +1,7 @@
 import * as L from 'leaflet';
 import AdvancedPointGeoJson from '../models/Features/AdvancedPointGeoJson';
 import CustomLayer from '../models/Features/CustomLayer';
-import AdvancedPointTypes from '../models/UIModels/AdvancedPointTypes';
+import AdvancedPointTypes from '../models/AdvancedPointTypes';
 import { addAdvancedPoint, setAdvancedPointCoordinates } from '../redux/reducers/storageSlice';
 import { store } from '../redux/store';
 
