@@ -73,9 +73,17 @@ export const mapSlice = createSlice({
         return sketch;
       });
     },
+    toggleSketchFrozenStatus: (state, action: PayloadAction<string>) => {
+      state.sketchList = state.sketchList.map((sketch) => {
+        if (sketch.id === action.payload) {
+          return { ...sketch, frozen: !sketch.frozen};
+        }
+        return sketch;
+      });
+    },
   },
 });
 
-export const { setMap, setDrawnItems, addSketch, removeSketch, setDrawnItemsRoute, rePositionSketch, setPositionOfCorner, setSketchOpacity, setSketchRotaion } = mapSlice.actions;
+export const { setMap, setDrawnItems, addSketch, removeSketch, setDrawnItemsRoute, rePositionSketch, setPositionOfCorner, setSketchOpacity, setSketchRotaion, toggleSketchFrozenStatus } = mapSlice.actions;
 
 export default mapSlice.reducer;

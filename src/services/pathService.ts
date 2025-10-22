@@ -169,7 +169,7 @@ function CheckBufferIntersection(path1: LineStringGeoJson, path2: LineStringGeoJ
   const coordinateListPath1 = path1.geometry.coordinates;
   const coordinateListPath2 = path2.geometry.coordinates;
 
-  const tolerance = 3;
+  const tolerance = 0.5;
 
   for (let k = 0; k < coordinateListPath1.length - 1; k++) {
     for (let m = 0;  m < coordinateListPath2.length - 1; m++) {

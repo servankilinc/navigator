@@ -6,6 +6,7 @@ export default class Sketch {
   corners: L.LatLng[]; // 4 tane ile sınırlandırılmalı
   opacity: number;
   rotation: number;
+  frozen: boolean = false;
   
   constructor(id: string, source: string, imageOverlay: L.ImageOverlay.Rotated, corners: L.LatLng[]){
     this.id = id;

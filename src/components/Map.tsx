@@ -76,12 +76,12 @@ function Map() {
     const map = L.map('map', {
       minZoom: 10,
       maxZoom: 25,
-    }).setView([39.090142, 33.088293], 17);
+    }).setView([37.944467, 32.561392], 17);
     
     dispatch(setMap(map));
     //https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+      attribution: '&copy; GORA YAZILIM',
     }).addTo(map);
 
     const drawnItemsGroup = new L.FeatureGroup();

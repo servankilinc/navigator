@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Button, Form, Stack } from 'react-bootstrap';
-import { FaEye, FaEyeSlash, FaTrash } from 'react-icons/fa6';
+import { FaBan, FaComputerMouse, FaEye, FaEyeSlash, FaTrash } from 'react-icons/fa6';
 
 type SectionProps = {
   index: number;
   sketchId: string;
   sketchSource: string;
   sketch_rotation: number;
-  sketch_opacity: number;
+  sketch_opacity: number;  
+  frozen: boolean;  
+  FreezingHandler: (sketchId: string) => void;
   RotationHandler: (angle: number, sketchId: string) => void;
   OpacityHandler: (opacity: number, sketchId: string) => void;
   SaveRotation: (sketchId: string, opacityVal: number) => void;
@@ -47,6 +49,13 @@ export default function ImageSettings(props: SectionProps): React.JSX.Element {
           }
           <Button onClick={() => props.HandleDelete(props.sketchId)} variant="danger" size="sm">
             <FaTrash color="#fff" size={14} />
+          </Button>
+          <Button onClick={() => props.FreezingHandler(props.sketchId)} variant="light" size="sm">
+            {
+              props.frozen ?
+              <FaBan color="#801a1aff" size={14} /> :
+              <FaComputerMouse color="#1e3050" size={14} /> 
+            }
           </Button>
         </Stack>
       </Stack>

@@ -12,6 +12,7 @@ import {
   setPositionOfCorner,
   setSketchOpacity,
   setSketchRotaion,
+  toggleSketchFrozenStatus,
 } from '../redux/reducers/mapSlice';
 import ImageSettings from './ImageSettings';
 import { showAlertError } from '../redux/reducers/alertSlice';
@@ -66,6 +67,10 @@ export default function ImageController(): React.JSX.Element {
 
       // Poligon üzerine mousedown olayı ekleyerek sürüklemeyi başlat
       polygon.on('mousedown', (e: L.LeafletMouseEvent) => {
+        // ilgili kroki dondurululmamış ise devam et
+        const relatedSketch = store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id);
+        if(relatedSketch == null || relatedSketch.frozen == true) return;
+
         isDragging = true;
         startLatLng = e.latlng;
         // Sürükleme sırasında haritanın da sürüklenmesini engellemek için
@@ -75,6 +80,10 @@ export default function ImageController(): React.JSX.Element {
       // Harita üzerinde mousemove ile poligonun konumunu güncelle
       map!.on('mousemove', (e: L.LeafletMouseEvent) => {
         if (!isDragging || !startLatLng) return;
+        
+        // ilgili kroki dondurululmamış ise devam et
+        const relatedSketch = store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id);
+        if(relatedSketch == null || relatedSketch.frozen == true) return;
 
         // Fare hareketi farkını hesapla
         const latDiff = e.latlng.lat - startLatLng.lat;
@@ -110,7 +119,10 @@ export default function ImageController(): React.JSX.Element {
       // #region corner points
 
       cp1.on('drag', () => {
-        var _corners = [...store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id)!.corners];
+        const relatedSketch = store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id);
+        if(relatedSketch == null || relatedSketch.frozen == true) return;
+        
+        var _corners = [...relatedSketch.corners];
         _corners[0] = cp1.getLatLng();
         imageOverlay.reposition(_corners[0], _corners[1], _corners[3]);
         polygon.setLatLngs([_corners]);
@@ -118,7 +130,10 @@ export default function ImageController(): React.JSX.Element {
       });
 
       cp2.on('drag', () => {
-        var _corners = [...store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id)!.corners];
+        const relatedSketch = store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id);
+        if(relatedSketch == null || relatedSketch.frozen == true) return;
+        
+        var _corners = [...relatedSketch.corners];
         _corners[1] = cp2.getLatLng();
         imageOverlay.reposition(_corners[0], _corners[1], _corners[3]);
         polygon.setLatLngs([_corners]);
@@ -126,7 +141,10 @@ export default function ImageController(): React.JSX.Element {
       });
 
       cp3.on('drag', () => {
-        var _corners = [...store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id)!.corners];
+        const relatedSketch = store.getState().mapReducer.sketchList.find((sketch) => sketch.id === id);
+        if(relatedSketch == null || relatedSketch.frozen == true) return;
+        
+        var _corners = [...relatedSketch.corners];
         _corners[3] = cp3.getLatLng();
         imageOverlay.reposition(_corners[0], _corners[1], _corners[3]);
         polygon.setLatLngs([_corners]);
@@ -135,6 +153,13 @@ export default function ImageController(): React.JSX.Element {
       // #endregion
     }
   };
+
+  function FreezingHandler(sketchId: string){
+    const sketch = sketchList.find((sketch) => sketch.id === sketchId);
+    if (sketch) {
+      dispath(toggleSketchFrozenStatus(sketchId));
+    }
+  }
 
   function HandleRotate(angle: number, sketchId: string) {
     const sketch = sketchList.find((sketch) => sketch.id === sketchId);
@@ -214,6 +239,8 @@ export default function ImageController(): React.JSX.Element {
                 sketchSource={sketch.source}
                 sketch_rotation={sketch.rotation}
                 sketch_opacity={sketch.opacity}
+                frozen={sketch.frozen}
+                FreezingHandler={FreezingHandler}
                 RotationHandler={HandleRotate}
                 OpacityHandler={HandleOpacity}
                 SaveRotation={SaveRotation}
