@@ -39,8 +39,8 @@ export function UpdatePath(layer: CustomLayer, drawnItems: L.FeatureGroup<any>) 
     (latlngs as L.LatLng[]).forEach((item: L.LatLng) => newCoordinates.push([item.lng, item.lat]));
     store.dispatch(setPathCoordinates({ pathId: path.properties.id, coordinates: newCoordinates }));
 
-    const _pathList = store.getState().storageReducer.paths;
-    FindIntersections(_pathList, path.properties.id, drawnItems);
+    // const _pathList = store.getState().storageReducer.paths;
+    // FindIntersections(_pathList, path.properties.id, drawnItems);
   }
   else {
     throw new Error('Informatinons could not be updated');

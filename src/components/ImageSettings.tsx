@@ -34,7 +34,7 @@ export default function ImageSettings(props: SectionProps): React.JSX.Element {
     <>
       <Stack direction="horizontal" gap={2} className="justify-content-between py-2 border-bottom">
         <Stack direction='horizontal' gap={2}>
-          <img src={props.sketchSource} alt={`Uploaded`} style={{ height: '4vh', width: '4vh', objectFit: 'cover', borderRadius: '50%' }} />
+          <img src={'http://localhost:5000/api/sketch/' + props.sketchSource} alt={`Uploaded`} style={{ height: '4vh', width: '4vh', objectFit: 'cover', borderRadius: '50%' }} />
           <span>Resim {props.index}</span>
         </Stack>
 

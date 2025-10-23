@@ -22,6 +22,7 @@ import EntrancePointGeoJson from './models/Features/EntrancePointGeoJson';
 import PolygonGeoJson from './models/Features/PolygonGeoJson';
 import LineStringGeoJson from './models/Features/LineStringGeoJson';
 import { showAlertError, showAlertSuccess } from './redux/reducers/alertSlice';
+import SketchModel from './models/UIModels/SketchModel';
 
 function App(): React.JSX.Element {
   const dispatch = useAppDispatch();
@@ -34,6 +35,7 @@ function App(): React.JSX.Element {
   const graphList = useAppSelector((state) => state.storageReducer.graphList);
   const pathList = useAppSelector((state) => state.storageReducer.paths);
   const polygonList = useAppSelector((state) => state.storageReducer.polygons);
+  const sketchList = useAppSelector((state) => state.mapReducer.sketchList);
 
   useEffect(() => {
     FetchData();
@@ -54,6 +56,12 @@ function App(): React.JSX.Element {
       const data_graph: Graph[] = await res_graph.json();
       const data_path: LineStringGeoJson[] = await res_path.json();
       const data_polygon: PolygonGeoJson[] = await res_polygon.json();
+
+      if(data_floor == null || data_floor.length <= 0){
+        dispatch(showAlertSuccess({ message: 'Sunucu Tarafında Bilgi Bulunmaıyor!' }));
+        SetDefaultData();
+        return;
+      }
 
       dispatch(setAdvancedPointList(data_advancedPoint));
       dispatch(setEntrancePointList(data_entrancePoint));
@@ -89,6 +97,10 @@ function App(): React.JSX.Element {
       await fetch('http://localhost:5000/api/graph/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(graphList)});
       await fetch('http://localhost:5000/api/path/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(pathList)});
       await fetch('http://localhost:5000/api/polygon/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(polygonList)});
+      if(sketchList != null) {
+        let sketchCreateModels = sketchList.map(d => new SketchModel(d));
+        await fetch('http://localhost:5000/api/sketch/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(sketchCreateModels)});
+      }
       dispatch(showAlertSuccess({ message: 'Veriler Başarıyla Kaydedildi.' }));
     } catch (error) {
       dispatch(showAlertError({ message: 'Veriler Kaydedilirken Bir Sorun Oluştu.' }));
