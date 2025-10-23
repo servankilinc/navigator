@@ -1,11 +1,10 @@
 import * as L from 'leaflet';
 import * as turf from '@turf/turf';
-import { FeatureCollection, GeoJsonProperties, Point, Position } from 'geojson';
+import { Feature, FeatureCollection, GeoJsonProperties, MultiPolygon, Point, Polygon, Position } from 'geojson';
 import { store } from '../redux/store';
 import { addPath, setPathCoordinateLatLng, setPathCoordinates, splicePathCoordinates } from '../redux/reducers/storageSlice';
 import LineStringGeoJson from '../models/Features/LineStringGeoJson';
 import CustomLayer from '../models/Features/CustomLayer';
-
 
 export function CreatePath(geoJson: LineStringGeoJson, layer: CustomLayer, _id: string, floor: number, drawnItems: L.FeatureGroup<any>) {
   drawnItems.addLayer(layer);
@@ -18,7 +17,7 @@ export function CreatePath(geoJson: LineStringGeoJson, layer: CustomLayer, _id: 
   };
   const pathList = store.getState().storageReducer.paths;
   if (pathList == null) throw new Error('Path list could not found');
-  
+
   const _newPathList = [...store.getState().storageReducer.paths, geoJson];
   store.dispatch(addPath(geoJson as LineStringGeoJson));
   FindIntersections(_newPathList, geoJson.properties.id, drawnItems);
@@ -27,10 +26,10 @@ export function CreatePath(geoJson: LineStringGeoJson, layer: CustomLayer, _id: 
 export function UpdatePath(layer: CustomLayer, drawnItems: L.FeatureGroup<any>) {
   let pathList = store.getState().storageReducer.paths;
   if (pathList == null) throw new Error('Path list could not found');
-  
+
   let path = pathList.find((p) => p.properties.id == layer.customProperties!.id);
   if (path == null) throw new Error('Line to update not founded');
-  
+
   if (!(layer instanceof L.Polyline)) throw new Error('Layer is not a polyline!');
 
   const latlngs = layer.getLatLngs();
@@ -41,14 +40,12 @@ export function UpdatePath(layer: CustomLayer, drawnItems: L.FeatureGroup<any>) 
 
     // const _pathList = store.getState().storageReducer.paths;
     // FindIntersections(_pathList, path.properties.id, drawnItems);
-  }
-  else {
+  } else {
     throw new Error('Informatinons could not be updated');
   }
 }
 
-
-export function ShowPath(path: LineStringGeoJson, drawnItems: L.FeatureGroup<any>): void  {
+export function ShowPath(path: LineStringGeoJson, drawnItems: L.FeatureGroup<any>): void {
   L.geoJSON(path, {
     onEachFeature: function (_feature, layer) {
       (layer as CustomLayer).customProperties = {
@@ -56,64 +53,65 @@ export function ShowPath(path: LineStringGeoJson, drawnItems: L.FeatureGroup<any
         floor: path.properties.floor,
         typeOfData: 'polyline',
       };
-      (layer as any)._leaflet_id = path.properties.layerId!; 
+      (layer as any)._leaflet_id = path.properties.layerId!;
       drawnItems.addLayer(layer);
     },
   });
 }
 
-export function HidePathByLayer(layer: L.Layer, drawnItems:  L.FeatureGroup<any>): void {
-  if(layer != null){
+export function HidePathByLayer(layer: L.Layer, drawnItems: L.FeatureGroup<any>): void {
+  if (layer != null) {
     drawnItems.removeLayer(layer);
   }
 }
 
 export function HidePath(path: LineStringGeoJson, drawnItems: L.FeatureGroup<any>): void {
   const layer = drawnItems.getLayer(path.properties.layerId!);
-  if(layer == null) throw new Error('Layer of path colud not found');
-  
+  if (layer == null) throw new Error('Layer of path colud not found');
+
   drawnItems.removeLayer(layer);
 }
 
-export function ShowOrHidePath(path: LineStringGeoJson, drawnItems:  L.FeatureGroup<any>): boolean {
+export function ShowOrHidePath(path: LineStringGeoJson, drawnItems: L.FeatureGroup<any>): boolean {
   const layer = drawnItems.getLayer(path.properties.layerId!);
-  if(layer != null){
-    console.log(layer)
+  if (layer != null) {
+    console.log(layer);
     HidePathByLayer(layer, drawnItems);
     return false;
-  }
-  else{
+  } else {
     ShowPath(path, drawnItems);
     return true;
   }
 }
 
-
 // ############################## INTERSECTION METHODS ##############################
 
-export function FindIntersections(pathList: LineStringGeoJson[], newPathId: string, drawnItems: L.FeatureGroup<any>): void
-{
+export function FindIntersections(pathList: LineStringGeoJson[], newPathId: string, drawnItems: L.FeatureGroup<any>): void {
   const path1 = pathList.find((f) => f.properties.id == newPathId);
   if (path1 == null) throw new Error('New path not found in finding intersections!');
-  
-  pathList.filter((f) => path1.properties.floor == f.properties.floor && path1.properties.id != f.properties.id).map((path2) => 
-  {
-    const linePath1 = turf.lineString(path1.geometry.coordinates);
-    const linePath2 = turf.lineString(path2.geometry.coordinates);
-    
-    const intersect = turf.lineIntersect(linePath1, linePath2);
 
-    if (intersect.features.length > 0) {
-      ConnectIntersections(intersect, path1, path2, drawnItems);
-    }
-    else {
-      CheckBufferIntersection(path1, path2, drawnItems);
-    }
-  });
+  pathList
+    .filter((f) => path1.properties.floor == f.properties.floor && path1.properties.id != f.properties.id)
+    .map((path2) => {
+      const linePath1 = turf.lineString(path1.geometry.coordinates);
+      const linePath2 = turf.lineString(path2.geometry.coordinates);
+
+      const intersect = turf.lineIntersect(linePath1, linePath2);
+
+      if (intersect.features.length > 0) {
+        ConnectIntersections(intersect, path1, path2, drawnItems);
+      } else {
+        CheckBufferIntersection(path1, path2, drawnItems);
+      }
+    });
 }
 
-function ConnectIntersections(intersect: FeatureCollection<Point, GeoJsonProperties>, path1: LineStringGeoJson, path2: LineStringGeoJson, drawnItems: L.FeatureGroup<any>)
-{
+function ConnectIntersections(
+  intersect: FeatureCollection<Point, GeoJsonProperties>,
+  path1: LineStringGeoJson,
+  path2: LineStringGeoJson,
+  drawnItems: L.FeatureGroup<any>
+) {
   const coordinateListPath1 = path1.geometry.coordinates;
   const coordinateListPath2 = path2.geometry.coordinates;
 
@@ -123,132 +121,118 @@ function ConnectIntersections(intersect: FeatureCollection<Point, GeoJsonPropert
     var isExistOnPath1 = coordinateListPath1.some((c) => c[0] == cordinate[0] && c[1] == cordinate[1]);
     var isExistOnPath2 = coordinateListPath2.some((c) => c[0] == cordinate[0] && c[1] == cordinate[1]);
     if (isExistOnPath1 == true && isExistOnPath2 == true) continue;
-    
 
-    for (let k = 0;   k < coordinateListPath1.length - 1; k++) {
-      for (let m = 0;  m < coordinateListPath2.length - 1; m++) {
+    for (let k = 0; k < coordinateListPath1.length - 1; k++) {
+      for (let m = 0; m < coordinateListPath2.length - 1; m++) {
         const segment1 = turf.lineString([coordinateListPath1[k], coordinateListPath1[k + 1]]);
         const segment2 = turf.lineString([coordinateListPath2[m], coordinateListPath2[m + 1]]);
         const intersectSegment = turf.lineIntersect(segment1, segment2);
 
         // segmentler arasında kesişim var mı
-        if (intersectSegment.features.length > 0) {
-          if (!isExistOnPath1) {
-            const tempCords = [...coordinateListPath1];
-            tempCords.splice(k + 1, 0, cordinate);
-            store.dispatch(setPathCoordinates({ pathId: path1.properties.id, coordinates: tempCords }));
-          }
-          if (!isExistOnPath2) {
-            const tempCords = [...coordinateListPath2];
-            tempCords.splice(m + 1, 0, cordinate);
-            store.dispatch(setPathCoordinates({ pathId: path2.properties.id, coordinates: tempCords }));
-          }
+        if (intersectSegment.features.length == 0) continue;
 
-          drawnItems.addLayer(
-            L.circle([cordinate[1], cordinate[0]], {
-              color: 'orange',
-              fillColor: '#f03',
-              fillOpacity: 0.5,
-              radius: 3,
-            })
-          );
-
+        if (!isExistOnPath1) {
+          const tempCords = [...coordinateListPath1];
+          tempCords.splice(k + 1, 0, cordinate);
+          store.dispatch(setPathCoordinates({ pathId: path1.properties.id, coordinates: tempCords }));
         }
+        if (!isExistOnPath2) {
+          const tempCords = [...coordinateListPath2];
+          tempCords.splice(m + 1, 0, cordinate);
+          store.dispatch(setPathCoordinates({ pathId: path2.properties.id, coordinates: tempCords }));
+        }
+
+        drawnItems.addLayer(
+          L.circle([cordinate[1], cordinate[0]], {
+            color: 'orange',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 3,
+          })
+        );
       }
     }
   }
 }
 
-function CheckBufferIntersection(path1: LineStringGeoJson, path2: LineStringGeoJson, drawnItems: L.FeatureGroup<any>): void 
-{
+function CheckBufferIntersection(path1: LineStringGeoJson, path2: LineStringGeoJson, drawnItems: L.FeatureGroup<any>): void {
   // ***** kesişim olmaması durumunda *****
   // 1) tampon bölgeler ile tekrar kesişimi kontrol et
   // 2) eğer kesişim olursa kesişimin üzerinde olduğu segment'te kesişim noktası düğüm olarak eklenir
   // 3) diğer segmentin kesişime neden olan yakın düğümünün konumu kesişim noktası olarak düzenlenir
 
-  const coordinateListPath1 = path1.geometry.coordinates;
-  const coordinateListPath2 = path2.geometry.coordinates;
+  const coords1 = path1.geometry.coordinates;
+  const coords2 = path2.geometry.coordinates;
 
   const tolerance = 0.5;
 
-  for (let k = 0; k < coordinateListPath1.length - 1; k++) {
-    for (let m = 0;  m < coordinateListPath2.length - 1; m++) {
-      const segment1 = turf.lineString([coordinateListPath1[k], coordinateListPath1[k + 1]]);
-      const segment2 = turf.lineString([coordinateListPath2[m], coordinateListPath2[m + 1]]);
+  for (let k = 0; k < coords1.length - 1; k++) {
+    for (let m = 0; m < coords2.length - 1; m++) {
+      const segment1 = turf.lineString([coords1[k], coords1[k + 1]]);
+      const segment2 = turf.lineString([coords2[m], coords2[m + 1]]);
 
       const buffer1 = turf.buffer(segment1, tolerance, { units: 'meters' });
       const buffer2 = turf.buffer(segment2, tolerance, { units: 'meters' });
-      if (buffer1 == null || buffer2 == null) throw new Error('Buffer is coming undefined on buffer checking');
-      
-      var isInterSect = turf.booleanIntersects(buffer1, buffer2);
-      if (isInterSect == false) continue;
+      if (!buffer1 || !buffer2) continue;
+
+      // is there intersect
+      if (turf.booleanIntersects(buffer1, buffer2) == false) continue;
 
       const intersectPoly = turf.intersect(turf.featureCollection([buffer1, buffer2]));
-      if (intersectPoly == null) throw new Error('Intersection bufer as a Polygon is coming undefined on buffer checking');
-      
+      if (!intersectPoly?.geometry?.coordinates?.length) continue;
 
-      if (intersectPoly.geometry.coordinates.length > 0) {
-        var med = Math.floor(intersectPoly.geometry.coordinates[0].length / 2);
-        var intCoord : Position | Position[] = intersectPoly.geometry.coordinates[0][med] as Position;
-        
-        // false ise path1 de kesişim nokatına en yakın iki düğümün arasına kesişim noktası kordinatında yeni bir düğüm atılacak
-        // true ise aynı işlem path2 için uygulanır diğer senaryoda, ikinci segmentin en yakın düğümünün konumu doğrudan kesişim noktası olarak güncellenir
-        var isFirstSegmentResizing = true;
+      // const centroid = turf.center(intersectPoly);
+      // const centerCords = centroid.geometry.coordinates as [number, number];
+      const centerCords = turf.pointOnFeature(intersectPoly).geometry.coordinates;
 
-        var indexNearestNodeToIntersection: number | undefined = undefined; // kesişim noktasına en yakın düğümün index değeri
-        var minDistance = 0;
-        for (var x = 0; x < 2; x++) {
-          var _dist = turf.distance(
-            turf.point([coordinateListPath1[k + x][0], coordinateListPath1[k + x][1]]),
-            turf.point([intCoord[0], intCoord[1]])
-          );
-          if (minDistance == 0 || minDistance > _dist) {
-            minDistance = _dist;
-            indexNearestNodeToIntersection = k + x;
-          }
-        }
-        for (var x = 0; x < 2; x++) {
-          var _dist = turf.distance(
-            turf.point([coordinateListPath2[m + x][0], coordinateListPath2[m + x][1]]),
-            turf.point([intCoord[0], intCoord[1]])
-          );
-          if (minDistance == 0 || minDistance > _dist) {
-            minDistance = _dist;
-            isFirstSegmentResizing = false;
-            indexNearestNodeToIntersection = m + x;
-          }
-        }
+      const { nearestPath, nearestIndex } = findNearestPathSegment(coords1, coords2, centerCords, k, m);
 
-        if (indexNearestNodeToIntersection == undefined) throw new Error('indexNearestNodeToIntersection could not calculated');
- 
-        if (isFirstSegmentResizing == false) { // demek ki ilk segmentin ortasına yeni bir düğüm eklenecek
-          // ilk segmentin arasına kesişim noktası girmeli
-          store.dispatch(splicePathCoordinates({prevIndex: k + 1, pathId: path1.properties.id, coordinate: intCoord }));
-          // ikinci segment replace edilmeli
-          store.dispatch(setPathCoordinateLatLng({ latLngIndex: indexNearestNodeToIntersection, pathId: path2.properties.id, coordinate: intCoord }));
-        }
-        else {
-          // ikinci segmentin arasına kesişim noktası girmeli
-          store.dispatch(splicePathCoordinates({prevIndex: m + 1,  pathId: path2.properties.id, coordinate: intCoord }));
-          // ilk segmentin düğüm noka kordinatı değişmeli
-          store.dispatch(setPathCoordinateLatLng({ latLngIndex: indexNearestNodeToIntersection, pathId: path1.properties.id, coordinate: intCoord}));
-        }
+      updatePathGeometry(path1, path2, centerCords, nearestPath, nearestIndex, k, m);
 
-        drawnItems!.addLayer(
-          L.circle([intCoord[1], intCoord[0]], {
-            color: 'orange',
-            fillColor: 'green',
-            fillOpacity: 0.5,
-            radius: 3,
-          })
-        );
-
-      }
+      drawnItems!.addLayer(
+        L.circle([centerCords[1], centerCords[0]], {
+          color: 'orange',
+          fillColor: 'green',
+          fillOpacity: 0.5,
+          radius: 3,
+        })
+      );
     }
   }
 }
+ 
+function findNearestPathSegment(coords1: Position[], coords2: Position[], intCoord: Position, i: number, j: number): { nearestPath: 1 | 2; nearestIndex: number } {
+  const dist1 = getNearestIndexAndDistance(coords1, intCoord, i);
+  const dist2 = getNearestIndexAndDistance(coords2, intCoord, j);
 
+  return dist1.distance <= dist2.distance ? { nearestPath: 1, nearestIndex: dist1.index } : { nearestPath: 2, nearestIndex: dist2.index };
+}
 
+function getNearestIndexAndDistance(coords: Position[], intCoord: Position, startIdx: number) {
+  let nearestIndex = startIdx;
+  let minDist = Infinity;
+
+  for (let x = 0; x < 2; x++) {
+    const dist = turf.distance(turf.point(coords[startIdx + x]), turf.point(intCoord));
+    if (dist < minDist) {
+      minDist = dist;
+      nearestIndex = startIdx + x;
+    }
+  }
+  return { index: nearestIndex, distance: minDist };
+}
+
+function updatePathGeometry(path1: LineStringGeoJson, path2: LineStringGeoJson, intCoord: Position, nearestPath: 1 | 2, nearestIndex: number, i: number, j: number): void {
+  if (nearestPath === 2) {
+    // Path1'e yeni düğüm ekle, Path2'nin en yakın düğümünü güncelle
+    store.dispatch(splicePathCoordinates({ prevIndex: i + 1, pathId: path1.properties.id, coordinate: intCoord }));
+    store.dispatch(setPathCoordinateLatLng({ latLngIndex: nearestIndex, pathId: path2.properties.id, coordinate: intCoord }));
+  } else {
+    // Path2'ye yeni düğüm ekle, Path1'in en yakın düğümünü güncelle
+    store.dispatch(splicePathCoordinates({ prevIndex: j + 1, pathId: path2.properties.id, coordinate: intCoord }));
+    store.dispatch(setPathCoordinateLatLng({ latLngIndex: nearestIndex, pathId: path1.properties.id, coordinate: intCoord }));
+  }
+}
 
 // CreateLineString(geoJson: LineStringGeoJson, _id: string, layer: CustomLayer): void {
 //   geoJson.properties = {
@@ -264,7 +248,6 @@ function CheckBufferIntersection(path1: LineStringGeoJson, path2: LineStringGeoJ
 //   this.uiSynchronizerService.path();
 // }
 
-
 // DeletePath(pId: string) {
 //   const path = paths.findIndex((p) => p.properties.id == pId);
 //   if (path == null) {
@@ -277,4 +260,3 @@ function CheckBufferIntersection(path1: LineStringGeoJson, path2: LineStringGeoJ
 
 //   this.RemovePathFromMap(pId);
 // }
-
