@@ -4,8 +4,9 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { IoNavigateCircle, IoTrash } from 'react-icons/io5';
 import { showAlertError, showAlertSuccess } from '../redux/reducers/alertSlice';
 import Route from '../models/Route';
-import { setRoutes } from '../redux/reducers/storageSlice';
+import { setRouteList } from '../redux/reducers/storageSlice';
 import { ClearRoutes, GenerateRoutes, ShowRoute } from '../services/navigationService';
+import { FindIntersections } from '../services/pathService';
 
 export default function NavigationController(): React.JSX.Element {
   const dispatch = useAppDispatch();
@@ -15,6 +16,7 @@ export default function NavigationController(): React.JSX.Element {
 
   const currentFloor = useAppSelector((state) => state.appReducer.currentFloor);
   const polygonList = useAppSelector((state) => state.storageReducer.polygons);
+  const pathList = useAppSelector((state) => state.storageReducer.paths);
 
   const [startPolyId, setStartPolyId] = useState<string>();
   const [targetPolyId, setTargetPolyId] = useState<string>();
@@ -35,7 +37,7 @@ export default function NavigationController(): React.JSX.Element {
         ShowRoute(currentResult.path, drawnItemsRoute!);
       }
 
-      dispatch(setRoutes(tempRouteList));
+      dispatch(setRouteList(tempRouteList));
     }
     catch (error) {
       dispatch(showAlertSuccess({ message: (error as Error).message }));
@@ -49,6 +51,11 @@ export default function NavigationController(): React.JSX.Element {
     catch (error) {
       dispatch(showAlertError({ message: (error as Error).message }));
     }
+  }
+
+  function CallFindIntersection(): void {
+    if(drawnItems == undefined) return;
+    FindIntersections(pathList, drawnItems);
   }
 
   return (
@@ -78,7 +85,10 @@ export default function NavigationController(): React.JSX.Element {
         </FormGroup>
 
         <Stack direction="horizontal" className="justify-content-around py-4">
-          <Button variant="success" onClick={HandleNavigation}>
+          <Button variant="warning" onClick={HandleNavigation}>
+            <IoNavigateCircle color="white" />
+          </Button>
+          <Button variant="success" onClick={CallFindIntersection}>
             <IoNavigateCircle color="white" />
           </Button>
           <Button variant="danger" onClick={HandleClear}>

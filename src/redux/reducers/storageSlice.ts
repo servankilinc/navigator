@@ -12,9 +12,9 @@ import { UpdatePointCoordinatesModel } from '../../models/UIModels/UpdatePointCo
 import UpdatePathCoordinatesModel from '../../models/UIModels/UpdatePathCoordinatesModel';
 import UpdateAdvancedPointInfoModel from '../../models/UIModels/UpdateAdvancedPointInfoModel';
 import { AdvancedPointDirectionTypesEnums } from '../../models/AdvancedPointDirectionTypes';
-import DesignGraphListModel from '../../models/UIModels/DesignGraphListModel';
 import { SplicePathCoordinatesModel } from '../../models/UIModels/SplicePathCoordinatesModel';
 import SetPathCoordinateLatLngModel from '../../models/UIModels/SetPathCoordinateLatLngModel';
+import IntersectionPoint from '../../models/IntersectionPoint';
 import Route from '../../models/Route';
 
 interface StateUI {
@@ -22,9 +22,11 @@ interface StateUI {
   graphList: Graph[];
   polygons: PolygonGeoJson[];
   paths: LineStringGeoJson[];
-  routeList: Route[];
+  intersectedPaths: LineStringGeoJson[];
+  intersectionPoints: IntersectionPoint[];
   entrancePoints: EntrancePointGeoJson[];
   advancedPoints: AdvancedPointGeoJson[];
+  routeList: Route[];
 }
 
 const initialState: StateUI = {
@@ -32,9 +34,11 @@ const initialState: StateUI = {
   graphList: [],
   polygons: [],
   paths: [],
-  routeList: [],
+  intersectedPaths: [],
+  intersectionPoints: [],
   entrancePoints: [],
   advancedPoints: [],
+  routeList: [],
 };
 
 export const storageSlice = createSlice({
@@ -54,14 +58,17 @@ export const storageSlice = createSlice({
     addPath: (state, action: PayloadAction<LineStringGeoJson>) => {
       state.paths = [...state.paths, action.payload];
     },
-    addRoute: (state, action: PayloadAction<Route>) => {
-      state.routeList = [...state.routeList, action.payload];
+    addIntersectionPoint: (state, action: PayloadAction<IntersectionPoint>) => {
+      state.intersectionPoints = [...state.intersectionPoints, action.payload];
     },
     addEntrancePoint: (state, action: PayloadAction<EntrancePointGeoJson>) => {
       state.entrancePoints = [...state.entrancePoints, action.payload];
     },
     addAdvancedPoint: (state, action: PayloadAction<AdvancedPointGeoJson>) => {
       state.advancedPoints = [...state.advancedPoints, action.payload];
+    },
+    addRoute: (state, action: PayloadAction<Route>) => {
+      state.routeList = [...state.routeList, action.payload];
     },
 
     setFloorList: (state, action: PayloadAction<Floor[]>) => {
@@ -77,8 +84,11 @@ export const storageSlice = createSlice({
     setPathList: (state, action: PayloadAction<LineStringGeoJson[]>) => {
       state.paths = [...action.payload];
     },
-    setRouteList: (state, action: PayloadAction<Route[]>) => {
-      state.routeList = [...action.payload];
+    setIntersectedPathList: (state, action: PayloadAction<LineStringGeoJson[]>) => {
+      state.intersectedPaths = [...action.payload];
+    },
+    setIntersectionPointList: (state, action: PayloadAction<IntersectionPoint[]>) => {
+      state.intersectionPoints = [...action.payload];
     },
     setEntrancePointList: (state, action: PayloadAction<EntrancePointGeoJson[]>) => {
       state.entrancePoints = [...action.payload];
@@ -86,13 +96,18 @@ export const storageSlice = createSlice({
     setAdvancedPointList: (state, action: PayloadAction<AdvancedPointGeoJson[]>) => {
       state.advancedPoints = [...action.payload];
     },
-
+    setRouteList: (state, action: PayloadAction<Route[]>) => {
+      state.routeList = [...action.payload];
+    },
 
     removePolygon: (state, action: PayloadAction<string>) => {
       state.polygons = state.polygons.filter((polygon) => polygon.properties.id !== action.payload);
     },
     removePath: (state, action: PayloadAction<string>) => {
       state.paths = state.paths.filter((path) => path.properties.id !== action.payload);
+    },
+    removeIntersectionPoint: (state, action: PayloadAction<string>) => {
+      state.intersectionPoints = state.intersectionPoints.filter((f) => f.id !== action.payload);;
     },
     removeEntrancePoint: (state, action: PayloadAction<string>) => {
       state.entrancePoints = state.entrancePoints.filter((ep) => ep.properties.id !== action.payload);
@@ -101,13 +116,11 @@ export const storageSlice = createSlice({
       state.advancedPoints = state.advancedPoints.filter((ap) => ap.properties.id !== action.payload);
     },
 
+    clearIntersectionPoints: (state) => {
+      state.intersectionPoints = [];
+    },
     clearRoutes: (state) => {
       state.routeList = [];
-    },
-
-    
-    setRoutes: (state, action: PayloadAction<Route[]>) => {
-      state.routeList = [...action.payload];
     },
 
     setEntrancePoinOfPolygon: (state, action: PayloadAction<EntrancePointGeoJson>) => {
@@ -173,31 +186,33 @@ export const storageSlice = createSlice({
     },
 
     splicePathCoordinates: (state, action: PayloadAction<SplicePathCoordinatesModel>) => {
-      const index = state.paths.findIndex((p) => p.properties.id === action.payload.pathId);
+      // paths to intersectedPaths
+      const index = state.intersectedPaths.findIndex((p) => p.properties.id === action.payload.pathId);
       if(index == -1) return;
 
-      const tempCords = [...state.paths[index].geometry.coordinates];
+      const tempCords = [...state.intersectedPaths[index].geometry.coordinates];
       tempCords.splice(action.payload.prevIndex, 0, action.payload.coordinate);
 
-      state.paths[index] = {
-        ...state.paths[index],
+      state.intersectedPaths[index] = {
+        ...state.intersectedPaths[index],
         geometry: {
-          ...state.paths[index].geometry,
+          ...state.intersectedPaths[index].geometry,
           coordinates: tempCords,
         },
       };
     },
 
     setPathCoordinateLatLng: (state, action: PayloadAction<SetPathCoordinateLatLngModel>) => {
-      const index = state.paths.findIndex((p) => p.properties.id === action.payload.pathId);
+      // paths to intersectedPaths
+      const index = state.intersectedPaths.findIndex((p) => p.properties.id === action.payload.pathId);
       if (index == -1) return;
 
-      const tempCords = [...state.paths[index].geometry.coordinates];
+      const tempCords = [...state.intersectedPaths[index].geometry.coordinates];
       tempCords[action.payload.latLngIndex] = action.payload.coordinate;
-      state.paths[index] = {
-        ...state.paths[index],
+      state.intersectedPaths[index] = {
+        ...state.intersectedPaths[index],
         geometry: {
-          ...state.paths[index].geometry,
+          ...state.intersectedPaths[index].geometry,
           coordinates: tempCords
         },
       };
@@ -257,17 +272,6 @@ export const storageSlice = createSlice({
           ...state.advancedPoints.filter((ap) => ap.properties.id !== action.payload.id), ...tempArray
         ];
       }
-    },
- 
-    
-    designGraphList: (state, action: PayloadAction<DesignGraphListModel>) => {
-      console.log("before design dispatch", state.graphList)
-      state.graphList = state.graphList.map((graphData) =>{
-        var newFloorGraphData = action.payload.updateModels.find(f => f.floor == graphData.floor);
-        if (newFloorGraphData == null) return { ...graphData };
-        return { ...graphData, nodes: [...newFloorGraphData.nodes], edges: [...newFloorGraphData.edges], graphGraphLib: newFloorGraphData.gGraph };
-      });
-      console.log("after design dispatch", state.graphList)
     }
   },
 });
@@ -277,22 +281,26 @@ export const {
   addGraph,
   addPolygon,
   addPath,
-  addRoute,
+  addIntersectionPoint,
   addEntrancePoint,
   addAdvancedPoint,
+  addRoute,
   setFloorList,
   setGraphList,
   setPolygonList,
   setPathList,
-  setRouteList,
+  setIntersectedPathList,
+  setIntersectionPointList,
   setEntrancePointList,
   setAdvancedPointList,
+  setRouteList,
   removePolygon,
   removePath,
+  removeIntersectionPoint,
   removeEntrancePoint,
   removeAdvancedPoint,
+  clearIntersectionPoints,
   clearRoutes,
-  setRoutes,
   setEntrancePoinOfPolygon,
   setEntrancePointCordsOfPolygon,
   setPolygonInfo,
@@ -302,8 +310,7 @@ export const {
   setPathCoordinateLatLng,
   setEntrancePointCoordinates,
   setAdvancedPointCoordinates,
-  setAdvancedPointInfo,
-  designGraphList,
+  setAdvancedPointInfo
 } = storageSlice.actions;
 
 export default storageSlice.reducer;

@@ -71,10 +71,9 @@ function Polygons() {
 
   return (
     <>
-      <ListGroup className="shadow">
+      <ListGroup className="shadow" style={{maxHeight: '400px', overflow: 'auto'}}>
         <ListGroup.Item className="bg-light text-primary fw-bold">Konum Listesi</ListGroup.Item>
-        {polygonList != null &&
-          drawnItems != null &&
+        {polygonList != null && drawnItems != null &&
           polygonList
             .filter((f) => currentFloor != null && f.properties.floor == currentFloor?.index)
             .map((p) => (

@@ -4,14 +4,7 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { Form, ListGroup, Stack } from 'react-bootstrap';
 import Sketch from '../models/Sketch';
 import e7 from '../scripts/idGenerator';
-import {
-  addSketch,
-  removeSketch,
-  rePositionSketch,
-  setSketchOpacity,
-  setSketchRotaion,
-  toggleSketchFrozenStatus,
-} from '../redux/reducers/mapSlice';
+import { addSketch, removeSketch, rePositionSketch, setSketchOpacity, setSketchRotaion, toggleSketchFrozenStatus } from '../redux/reducers/mapSlice';
 import ImageSettings from './ImageSettings';
 import { showAlertError } from '../redux/reducers/alertSlice';
 import 'leaflet-imageoverlay-rotated';
@@ -25,30 +18,30 @@ export default function ImageController(): React.JSX.Element {
   const map = useAppSelector((state) => state.mapReducer.map);
 
   useEffect(() => {
-    if (map != undefined){
+    if (map != undefined) {
       fetchPersistentSketches();
     }
   }, [map]);
 
-  const fetchPersistentSketches =  async () => {
+  const fetchPersistentSketches = async () => {
     const res_sktech = await fetch('http://localhost:5000/api/sketch');
     const data_sketch: SketchModel[] = await res_sktech.json();
     if (data_sketch == null || data_sketch.length == 0) return;
 
-    data_sketch.forEach(ds => {
+    data_sketch.forEach((ds) => {
       const source = `${ds.source}`;
-      BindSketchToMap(ds.id, source, ds.corners)
+      BindSketchToMap(ds.id, source, ds.corners, true);
     });
-  }
+  };
 
   const HandleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;  
+    const files = event.target.files;
     if (!files || files.length === 0) return;
-    
-    const formData = new FormData();
-    formData.append("file", files[0]);
 
-    const res = await fetch("http://localhost:5000/api/sketch/upload", { method: "POST", body: formData });
+    const formData = new FormData();
+    formData.append('file', files[0]);
+
+    const res = await fetch('http://localhost:5000/api/sketch/upload', { method: 'POST', body: formData });
     const response = await res.json();
 
     const source = `${response.url}`;
@@ -62,14 +55,12 @@ export default function ImageController(): React.JSX.Element {
       L.latLng(center.lat - offset, center.lng - offset),
     ];
 
-    BindSketchToMap(newSketchId, source, newCenteredCorners);
-      
+    BindSketchToMap(newSketchId, source, newCenteredCorners, false);
+
     event.target.value = '';
   };
 
-  /// Krokinin Haritaya Eklenmesi Ve Kontrolü İçin Gerekli
-  function BindSketchToMap(id: string, source: string, corners: L.LatLng[]) {
-
+  function BindSketchToMap(id: string, source: string, corners: L.LatLng[], froozen: boolean) {
     // Leaflet DistortableImage kullanımı
     var imageOverlay = L.imageOverlay
       .rotated(`http://localhost:5000/api/sketch/${source}`, corners[0], corners[1], corners[3], {
@@ -78,7 +69,7 @@ export default function ImageController(): React.JSX.Element {
       })
       .addTo(map!);
 
-    const newSketch = new Sketch(id, source, imageOverlay, corners);
+    const newSketch = new Sketch(id, source, imageOverlay, corners, froozen);
     dispath(addSketch(newSketch));
 
     var polygon = new L.Polygon(corners, {
@@ -180,7 +171,7 @@ export default function ImageController(): React.JSX.Element {
     // #endregion
   }
 
-  function FreezingHandler(sketchId: string){
+  function FreezingHandler(sketchId: string) {
     const sketch = sketchList.find((sketch) => sketch.id === sketchId);
     if (sketch) {
       dispath(toggleSketchFrozenStatus(sketchId));
@@ -223,6 +214,7 @@ export default function ImageController(): React.JSX.Element {
   function SaveRotation(sketchId: string, rotateVal: number) {
     dispath(setSketchRotaion({ id: sketchId, rotation: rotateVal }));
   }
+
   function SaveOpacity(sketchId: string, opacityVal: number) {
     dispath(setSketchOpacity({ id: sketchId, opacity: opacityVal }));
   }
@@ -234,9 +226,8 @@ export default function ImageController(): React.JSX.Element {
         // sketch.imageOverlay.remove();
         map!.removeLayer(sketch.imageOverlay);
         dispath(removeSketch(sketchId));
-        await fetch(`http://localhost:5000/api/sketch/${sketchId}`, { method: 'DELETE', headers: {'Content-Type': 'application/json'}});
-      } 
-      else {
+        await fetch(`http://localhost:5000/api/sketch/${sketchId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+      } else {
         throw new Error('Katman bulunamadı');
       }
     } catch (error: Error | any) {

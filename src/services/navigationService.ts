@@ -30,8 +30,6 @@ export function GenerateRoutes(startPolyId: string, targetPolyId: string) {
   const startPoly = polygonList.find(f => f.properties.id == startPolyId);
   const targetPoly = polygonList.find(f => f.properties.id == targetPolyId);
   if (startPoly == null || targetPoly == null) throw new Error('Start or Target locations not found');
-
-
   if (startPoly.properties.entrance == null || targetPoly.properties.entrance == null) throw new Error('Entrance poin colud not found in polygon on finding nearest node');
 
   DesignGraph();

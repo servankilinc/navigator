@@ -31,7 +31,7 @@ export default function Paths(): React.JSX.Element {
   }
 
   return (
-    <ListGroup className="shadow">
+    <ListGroup className="shadow" style={{maxHeight: '400px', overflow: 'auto'}}>
       <ListGroup.Item className="bg-light text-primary fw-bold">Yol Listesi</ListGroup.Item>
       {pathList != null &&
         drawnItems != null &&

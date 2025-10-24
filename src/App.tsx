@@ -4,7 +4,7 @@ import { FaFileArrowUp } from 'react-icons/fa6';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import './styles/App.css';
 import { setCurrentFloor } from './redux/reducers/appSlice';
-import { addFloor, addGraph, setAdvancedPointList, setEntrancePointList, setFloorList, setGraphList, setPathList, setPolygonList } from './redux/reducers/storageSlice';
+import { addFloor, setAdvancedPointList, setEntrancePointList, setFloorList, setGraphList, setPathList, setPolygonList } from './redux/reducers/storageSlice';
 import e7 from './scripts/idGenerator';
 import Map from './components/Map';
 import Floors from './components/Floors';
@@ -26,7 +26,7 @@ import SketchModel from './models/UIModels/SketchModel';
 
 function App(): React.JSX.Element {
   const dispatch = useAppDispatch();
-  
+
   const currentFloor = useAppSelector((state) => state.appReducer.currentFloor);
 
   const advancedPointList = useAppSelector((state) => state.storageReducer.advancedPoints);
@@ -35,6 +35,7 @@ function App(): React.JSX.Element {
   const graphList = useAppSelector((state) => state.storageReducer.graphList);
   const pathList = useAppSelector((state) => state.storageReducer.paths);
   const polygonList = useAppSelector((state) => state.storageReducer.polygons);
+
   const sketchList = useAppSelector((state) => state.mapReducer.sketchList);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ function App(): React.JSX.Element {
       const data_path: LineStringGeoJson[] = await res_path.json();
       const data_polygon: PolygonGeoJson[] = await res_polygon.json();
 
-      if(data_floor == null || data_floor.length <= 0){
+      if (data_floor == null || data_floor.length <= 0) {
         dispatch(showAlertSuccess({ message: 'Sunucu Tarafında Bilgi Bulunmaıyor!' }));
         SetDefaultData();
         return;
@@ -72,6 +73,7 @@ function App(): React.JSX.Element {
 
       dispatch(showAlertSuccess({ message: 'Veriler başarıyal getirildi.' }));
 
+      // ilk kattan başat
       dispatch(setCurrentFloor(data_floor.some((f) => f.index == 0) ? data_floor.find((f) => f.index == 0)! : data_floor[0]!));
     } catch (error) {
       dispatch(showAlertError({ message: 'Veriler getirilirken hata oluştu.' }));
@@ -82,24 +84,22 @@ function App(): React.JSX.Element {
   function SetDefaultData() {
     var id = e7();
     let floorObj = new Floor(0, id, 'Kat 0');
-    let graphObj = new Graph(0);
 
-    dispatch(addGraph(graphObj));
     dispatch(addFloor(floorObj));
     dispatch(setCurrentFloor(floorObj));
   }
 
   async function SendAllData() {
     try {
-      await fetch('http://localhost:5000/api/advancedPoint/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(advancedPointList)});
-      await fetch('http://localhost:5000/api/entrancePoint/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(entrancePointList)});
-      await fetch('http://localhost:5000/api/floor/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(floorList)});
-      await fetch('http://localhost:5000/api/graph/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(graphList)});
-      await fetch('http://localhost:5000/api/path/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(pathList)});
-      await fetch('http://localhost:5000/api/polygon/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(polygonList)});
-      if(sketchList != null) {
-        let sketchCreateModels = sketchList.map(d => new SketchModel(d));
-        await fetch('http://localhost:5000/api/sketch/UpdateAll', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(sketchCreateModels)});
+      await fetch('http://localhost:5000/api/advancedPoint/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(advancedPointList) });
+      await fetch('http://localhost:5000/api/entrancePoint/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entrancePointList) });
+      await fetch('http://localhost:5000/api/floor/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(floorList) });
+      await fetch('http://localhost:5000/api/graph/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(graphList) });
+      await fetch('http://localhost:5000/api/path/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pathList) });
+      await fetch('http://localhost:5000/api/polygon/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(polygonList) });
+      if (sketchList != null) {
+        let sketchCreateModels = sketchList.map((d) => new SketchModel(d));
+        await fetch('http://localhost:5000/api/sketch/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sketchCreateModels) });
       }
       dispatch(showAlertSuccess({ message: 'Veriler Başarıyla Kaydedildi.' }));
     } catch (error) {

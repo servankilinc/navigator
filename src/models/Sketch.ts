@@ -8,13 +8,14 @@ export default class Sketch {
   rotation: number;
   frozen: boolean = false;
   
-  constructor(id: string, source: string, imageOverlay: L.ImageOverlay.Rotated, corners: L.LatLng[]){
+  constructor(id: string, source: string, imageOverlay: L.ImageOverlay.Rotated, corners: L.LatLng[], froozen: boolean = false){
     this.id = id;
     this.source = source;
     this.imageOverlay = imageOverlay;
     this.corners = corners;
     this.opacity = 0.7;
     this.rotation = 0;
+    this.frozen = froozen;
   }
 }
 // var temp : Sketch = {
