@@ -6,6 +6,7 @@ export default interface PolygonGeoJson extends GeoJSON.Feature<GeoJSON.Polygon>
     id: string;
     floor: number;
     name?: string;
+    iconSource?: string;
     entrance?: EntrancePointGeoJson;
     popupContent?: string;
   };

@@ -32,7 +32,10 @@ export function GenerateRoutes(startPolyId: string, targetPolyId: string) {
   if (startPoly == null || targetPoly == null) throw new Error('Start or Target locations not found');
   if (startPoly.properties.entrance == null || targetPoly.properties.entrance == null) throw new Error('Entrance poin colud not found in polygon on finding nearest node');
 
-  DesignGraph();
+  // ************* IMPORTANT *************
+  // DesignGraph(); // todo buttona bağlanacak her seferinde oluşturumasına gerek yok
+  // ************* IMPORTANT *************
+
   const nearestNodeToStart = FindNearestNode(startPoly.properties.entrance.geometry.coordinates, startPoly.properties.floor);
   const nearestNodeToTarget = FindNearestNode(targetPoly.properties.entrance.geometry.coordinates, targetPoly.properties.floor);
 
@@ -47,7 +50,6 @@ export function GenerateRoutes(startPolyId: string, targetPolyId: string) {
       path: route
     });
   }
-
   // 2) Başlangıç konumu üstte veya aşağıda ise
   else {
     const direction = startPoly.properties.floor > targetPoly.properties.floor;
@@ -69,7 +71,7 @@ export function GenerateRoutes(startPolyId: string, targetPolyId: string) {
         });
       }
       else if (floorDiff - index > 1) { // Ara Kat
-        // Todo: Arak Katlar için Görselleştirme Eklenmeli
+        // Todo: Ara Katlar için Görselleştirme Eklenmeli
       }
       else { // Hedef Konumun Bullunduğu Kat
         const nearestNodeToAdvancedPoint = FindNearestNode(nearestAdvancedPoint.geometry.coordinates, targetPoly.properties.floor);

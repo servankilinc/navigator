@@ -23,6 +23,9 @@ import PolygonGeoJson from './models/Features/PolygonGeoJson';
 import LineStringGeoJson from './models/Features/LineStringGeoJson';
 import { showAlertError, showAlertSuccess } from './redux/reducers/alertSlice';
 import SketchModel from './models/UIModels/SketchModel';
+import { FindIntersections } from './services/pathService';
+import { DesignGraph } from './services/graphService';
+import GraphBaseModel from './models/GraphBaseModel';
 
 function App(): React.JSX.Element {
   const dispatch = useAppDispatch();
@@ -54,7 +57,7 @@ function App(): React.JSX.Element {
       const data_advancedPoint: AdvancedPointGeoJson[] = await res_advancedPoint.json();
       const data_entrancePoint: EntrancePointGeoJson[] = await res_entrancePoint.json();
       const data_floor: Floor[] = await res_floor.json();
-      const data_graph: Graph[] = await res_graph.json();
+      const data_graph: GraphBaseModel[] = await res_graph.json();
       const data_path: LineStringGeoJson[] = await res_path.json();
       const data_polygon: PolygonGeoJson[] = await res_polygon.json();
 
@@ -67,7 +70,23 @@ function App(): React.JSX.Element {
       dispatch(setAdvancedPointList(data_advancedPoint));
       dispatch(setEntrancePointList(data_entrancePoint));
       dispatch(setFloorList(data_floor));
-      dispatch(setGraphList(data_graph));
+      // if(data_graph && data_graph.length > 0) dispatch(setGraphList(data_graph.map(d => d.mapToGraph())));
+      if (data_graph && data_graph.length > 0) {
+        const _graphList: Graph[] = [];
+        data_graph.forEach(pd => {
+          let _graph = new Graph(pd.floor);
+          _graph.nodes = pd.nodes;
+          _graph.edges = pd.edges;
+      
+          pd.edges.forEach((edge) => {
+            _graph.graphGraphLib.setNode(edge.source);
+            _graph.graphGraphLib.setNode(edge.target);
+            _graph.graphGraphLib.setEdge(edge.source, edge.target, edge.weight);
+          });
+          _graphList.push(_graph);
+        })
+        dispatch(setGraphList(_graphList));
+      }
       dispatch(setPathList(data_path));
       dispatch(setPolygonList(data_polygon));
 
@@ -91,10 +110,13 @@ function App(): React.JSX.Element {
 
   async function SendAllData() {
     try {
+      FindIntersections();
+      DesignGraph();
+
       await fetch('http://localhost:5000/api/advancedPoint/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(advancedPointList) });
       await fetch('http://localhost:5000/api/entrancePoint/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entrancePointList) });
       await fetch('http://localhost:5000/api/floor/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(floorList) });
-      await fetch('http://localhost:5000/api/graph/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(graphList) });
+      await fetch('http://localhost:5000/api/graph/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(graphList.map(d => d.toBaseModel())) });
       await fetch('http://localhost:5000/api/path/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pathList) });
       await fetch('http://localhost:5000/api/polygon/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(polygonList) });
       if (sketchList != null) {
@@ -102,7 +124,8 @@ function App(): React.JSX.Element {
         await fetch('http://localhost:5000/api/sketch/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sketchCreateModels) });
       }
       dispatch(showAlertSuccess({ message: 'Veriler Başarıyla Kaydedildi.' }));
-    } catch (error) {
+    } 
+    catch (error) {
       dispatch(showAlertError({ message: 'Veriler Kaydedilirken Bir Sorun Oluştu.' }));
     }
   }

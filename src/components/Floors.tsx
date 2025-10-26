@@ -1,7 +1,7 @@
-import { Button, ListGroup } from 'react-bootstrap';
-import { FaCirclePlus } from 'react-icons/fa6';
+import { Button, ListGroup, Stack } from 'react-bootstrap';
+import { FaCirclePlus, FaTrash } from 'react-icons/fa6';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { addFloor, addGraph } from '../redux/reducers/storageSlice';
+import { addFloor, removeFloor } from '../redux/reducers/storageSlice';
 import { setCurrentFloor } from '../redux/reducers/appSlice';
 import { ShowPolygon } from '../services/polygonService';
 import { ShowEntrancePoint } from '../services/entrancePointService';
@@ -9,7 +9,6 @@ import { ShowAdvancedPoint } from '../services/advancedPointService';
 import { ShowPath } from '../services/pathService';
 import CustomLayer from '../models/Features/CustomLayer';
 import Floor from '../models/Floor';
-import Graph from '../models/Graph';
 import e7 from '../scripts/idGenerator';
 import { ShowRoute } from '../services/navigationService';
 
@@ -30,26 +29,16 @@ function Floors() {
 
   function AddNewFloor(count: number): void {
     if (count == 1) {
-      let indexArr = floorList.map((f) => f.index);
-      let newIndex = Math.max(...indexArr) + 1;
-      let id = e7();
-
-      let floorObj = new Floor(newIndex, id, `Kat ${newIndex}`);
-      let graphObj = new Graph(newIndex);
-
-      dispath(addGraph(graphObj));
-      dispath(addFloor(floorObj));
+      const indexArr = floorList.map((f) => f.index);
+      const newIndex = Math.max(...indexArr) + 1;
+      const id = e7();
+      dispath(addFloor(new Floor(newIndex, id, `Kat ${newIndex}`)));
     }
     else {
-      let indexArr = floorList.map((f) => f.index);
-      let newIndex = Math.min(...indexArr) - 1;
-      let id = e7();
-
-      let floorObj = new Floor(newIndex, id, `Kat ${newIndex}`);
-      let graphObj = new Graph(newIndex);
-
-      dispath(addGraph(graphObj));
-      dispath(addFloor(floorObj));
+      const indexArr = floorList.map((f) => f.index);
+      const newIndex = Math.min(...indexArr) - 1;
+      const id = e7();
+      dispath(addFloor(new Floor(newIndex, id, `Kat ${newIndex}`)));
     }
   }
 
@@ -99,8 +88,26 @@ function Floors() {
       });
   }
 
+  function HandleRemoveFloor(floorIndex: number): void{
+    if(floorList.length <= 1) return;
+    dispath(removeFloor({floorIndex: floorIndex}));
+    if(floorIndex == currentFloor?.index){
+      const nextFirstFloor = floorList.find(f => f.index != floorIndex)?.index;
+      SwipeFloor(nextFirstFloor!);
+    }
+  }
+  function ButtonRemove({floorIndex}: {floorIndex: number}): React.JSX.Element {
+    const indexArr = floorList.map((f) => f.index);
+    const minIndex = Math.max(...indexArr);
+    const maxIndex = Math.min(...indexArr);
+    if(floorIndex == minIndex || floorIndex == maxIndex){
+      return(<Button onClick={() => HandleRemoveFloor(floorIndex)} variant="danger" size="sm" className='py-0 px-1'><FaTrash size={12} /></Button>)
+    }
+    return(<></>);
+  }
+
   return (
-    <ListGroup className="shadow">
+    <ListGroup className="shadow" style={{maxHeight: '400px', overflow: 'auto'}}>
       <ListGroup.Item className="bg-light text-primary fw-bold">Kat Listesi</ListGroup.Item>
       <ListGroup.Item className="p-0">
         <Button variant="light" onClick={() => AddNewFloor(1)}>
@@ -114,7 +121,10 @@ function Floors() {
             const active = currentFloor != null && floor.id == currentFloor.id;
             return (
               <ListGroup.Item key={floor.id} onClick={() => SwipeFloor(floor.index)} className={`fw-light text-start`} active={active}>
-                {floor.name}
+                <Stack direction='horizontal' gap={3}>
+                  <span className='me-auto'>{floor.name}</span>
+                  <ButtonRemove floorIndex={floor.index}/>
+                </Stack>
               </ListGroup.Item>
             );
           })}

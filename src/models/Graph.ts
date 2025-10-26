@@ -1,4 +1,5 @@
 import Edge from "./Edge";
+import GraphBaseModel from "./GraphBaseModel";
 import Node from "./Node"; 
 import { Graph as gGraph } from "graphlib";
 
@@ -23,5 +24,12 @@ export default class Graph {
     addNode(node: Node): void {
         this.nodes.push(node);
         this.graphGraphLib.setNode(node.id.toString());
+    }
+
+    toBaseModel(): GraphBaseModel{
+        let _baseModel = new GraphBaseModel(this.floor);
+        _baseModel.edges = this.edges;
+        _baseModel.nodes = this.nodes;
+        return _baseModel;
     }
 }

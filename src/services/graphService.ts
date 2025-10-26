@@ -88,7 +88,7 @@ export function DesignGraph(): void {
   const graphList: Graph[] = [];
 
   const floors = store.getState().storageReducer.floorList;
-  const paths = store.getState().storageReducer.intersectedPaths; // paths to intersectedPaths
+  const paths = store.getState().storageReducer.paths
 
   floors.forEach((floor) => {
     const newGraph = new Graph(floor.index);
