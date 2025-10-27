@@ -31,6 +31,19 @@ export default function ModalPolygonInfo({ isShowing, showModal, polygonId }: Se
     }
   }, [isShowing]);
 
+  const HandleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const formData = new FormData();
+    formData.append('file', files[0]);
+
+    const res = await fetch('http://localhost:5000/api/polygon/upload', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Upload failed');
+    const body = await res.json(); 
+    setIconSource(body.url);
+    e.target.value = '';
+  };
+
   function SavePolygonInformations() {
     const polygon = polygonList.find((p) => p.properties.id == polygonId);
     if (polygon == null) {
@@ -66,9 +79,12 @@ export default function ModalPolygonInfo({ isShowing, showModal, polygonId }: Se
           <Form.Label>Popup Bilgisi</Form.Label>
           <Form.Control placeholder="Popup Bilgisi" value={popupContent} onChange={(e) => setPopupContent(e.target.value)} />
         </Form.Group>
-        <Form.Group className="mb-3" controlId="formIconSource">
+        <Form.Group controlId="formFile" className="my-2">
           <Form.Label>İkon Bilgisi</Form.Label>
-          <Form.Control placeholder="İkon Bilgisi" value={iconSource} onChange={(e) => setIconSource(e.target.value)} />
+          <Form.Control type="file" accept="image/*" onChange={HandleFileUpload} />
+        </Form.Group>
+        <Form.Group className="mb-3" controlId="formIconSource">
+          <Form.Control placeholder="Henüz dosya yüklenmedi" value={iconSource} disabled={true} className='readonly' />
         </Form.Group>
       </Modal.Body>
       <Modal.Footer>
