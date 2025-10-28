@@ -47,12 +47,12 @@ function App(): React.JSX.Element {
 
   async function FetchData() {
     try {
-      const res_advancedPoint = await fetch('http://localhost:5000/api/advancedPoint');
-      const res_entrancePoint = await fetch('http://localhost:5000/api/entrancePoint');
-      const res_floor = await fetch('http://localhost:5000/api/floor');
-      const res_graph = await fetch('http://localhost:5000/api/graph');
-      const res_path = await fetch('http://localhost:5000/api/path');
-      const res_polygon = await fetch('http://localhost:5000/api/polygon');
+      const res_advancedPoint = await fetch(`${import.meta.env.VITE_API_URL}/api/advancedPoint`);
+      const res_entrancePoint = await fetch(`${import.meta.env.VITE_API_URL}/api/entrancePoint`);
+      const res_floor = await fetch(`${import.meta.env.VITE_API_URL}/api/floor`);
+      const res_graph = await fetch(`${import.meta.env.VITE_API_URL}/api/graph`);
+      const res_path = await fetch(`${import.meta.env.VITE_API_URL}/api/path`);
+      const res_polygon = await fetch(`${import.meta.env.VITE_API_URL}/api/polygon`);
 
       const data_advancedPoint: AdvancedPointGeoJson[] = await res_advancedPoint.json();
       const data_entrancePoint: EntrancePointGeoJson[] = await res_entrancePoint.json();
@@ -113,15 +113,15 @@ function App(): React.JSX.Element {
       FindIntersections();
       DesignGraph();
 
-      await fetch('http://localhost:5000/api/advancedPoint/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(advancedPointList) });
-      await fetch('http://localhost:5000/api/entrancePoint/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entrancePointList) });
-      await fetch('http://localhost:5000/api/floor/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(floorList) });
-      await fetch('http://localhost:5000/api/graph/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(graphList.map(d => d.toBaseModel())) });
-      await fetch('http://localhost:5000/api/path/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pathList) });
-      await fetch('http://localhost:5000/api/polygon/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(polygonList) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/advancedPoint/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(advancedPointList) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/entrancePoint/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entrancePointList) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/floor/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(floorList) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/graph/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(graphList.map(d => d.toBaseModel())) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/path/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pathList) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/polygon/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(polygonList) });
       if (sketchList != null) {
         let sketchCreateModels = sketchList.map((d) => new SketchModel(d));
-        await fetch('http://localhost:5000/api/sketch/UpdateAll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sketchCreateModels) });
+        await fetch(`${import.meta.env.VITE_API_URL}/api/sketch/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sketchCreateModels) });
       }
       dispatch(showAlertSuccess({ message: 'Veriler Başarıyla Kaydedildi.' }));
     } 

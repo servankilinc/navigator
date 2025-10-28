@@ -42,7 +42,7 @@ export default function ImageController(): React.JSX.Element {
 
     let mounted = true;
     (async () => {
-      const res = await fetch('http://localhost:5000/api/sketch');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/sketch`);
       if (!res.ok) return;
       const data: SketchModel[] = await res.json();
       if (!mounted || !data) return;
@@ -67,7 +67,7 @@ export default function ImageController(): React.JSX.Element {
     const formData = new FormData();
     formData.append('file', files[0]);
 
-    const res = await fetch('http://localhost:5000/api/sketch/upload', { method: 'POST', body: formData });
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/sketch/upload`, { method: 'POST', body: formData });
     if (!res.ok) throw new Error('Upload failed');
     const body = await res.json();
 
@@ -91,7 +91,7 @@ export default function ImageController(): React.JSX.Element {
 
     // Leaflet DistortableImage kullanımı
     const imageOverlay = L.imageOverlay
-      .rotated(`http://localhost:5000/api/sketch/${source}`, corners[0], corners[1], corners[3], {
+      .rotated(`${import.meta.env.VITE_API_URL}/api/sketch/${source}`, corners[0], corners[1], corners[3], {
         opacity: 0.7,
         interactive: true,
       })
@@ -268,7 +268,7 @@ export default function ImageController(): React.JSX.Element {
 
         if (map!.hasLayer(sketch.imageOverlay)) map!.removeLayer(sketch.imageOverlay);
         dispatch(removeSketch(sketchId));
-        await fetch(`http://localhost:5000/api/sketch/${sketchId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+        await fetch(`${import.meta.env.VITE_API_URL}/api/sketch/${sketchId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
       } catch (err: any) {
         dispatch(showAlertError({ message: err?.message || 'Silme İşleminde Hata Oluştu' }));
       }

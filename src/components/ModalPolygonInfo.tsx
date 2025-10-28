@@ -37,7 +37,7 @@ export default function ModalPolygonInfo({ isShowing, showModal, polygonId }: Se
     const formData = new FormData();
     formData.append('file', files[0]);
 
-    const res = await fetch('http://localhost:5000/api/polygon/upload', { method: 'POST', body: formData });
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/polygon/upload`, { method: 'POST', body: formData });
     if (!res.ok) throw new Error('Upload failed');
     const body = await res.json(); 
     setIconSource(body.url);
