@@ -74,9 +74,9 @@ function Map() {
 
   function MapInitilaze() {
     const map = L.map('map', {
-      minZoom: 10,
-      maxZoom: 25,
-    }).setView([37.944467, 32.561392], 17);
+      minZoom: import.meta.env.VITE_MIN_VITE_ZOOM,
+      maxZoom: import.meta.env.VITE_MAX_VITE_ZOOM,
+    }).setView([import.meta.env.VITE_CENTER_LAT, import.meta.env.VITE_CENTER_LNGC ], import.meta.env.VITE_ZOOM);
     
     dispatch(setMap(map));
     // https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
