@@ -18,8 +18,9 @@ import { CreateEntrancePoint, ShowEntrancePoint, UpdateEntrancePoint } from '../
 import { CreatePolygon, ShowPolygon, UpdatePolygon } from '../services/polygonService';
 import { CreatePath, ShowPath, UpdatePath } from '../services/pathService';
 import { showAlertError } from '../redux/reducers/alertSlice';
-import { CreateThreeDModel } from '../services/threeDModelService';
+import { CreateThreeDModel, UpdateThreeDModel } from '../services/threeDModelService';
 import ThreeDModelPointGeoJson from '../models/Features/ThreeDModelPointGeoJson';
+import ModalThreeDModelInfo from './ModalThreeDModelInfo';
 
 function Map() {
   const dispatch = useAppDispatch();
@@ -48,6 +49,11 @@ function Map() {
   // ------------------ FORM ADVANCED POINT INFO ------------------
   const [showAdvPointEdit, setShowAdvPointEdit] = useState(false);
   const [advPointId, setAdvPointId] = useState<string>('');
+  // ------------------ FORM ADVANCED POINT INFO ------------------
+
+  // ------------------ FORM 3D MODEL INFO ------------------
+  const [showThreeDModelEdit, setShowThreeDModelEdit] = useState(false);
+  const [threeDModelId, setThreeDModelId] = useState<string>('');
   // ------------------ FORM ADVANCED POINT INFO ------------------
 
   useEffect(() => { polygonListRef.current = polygonList; }, [polygonList]);
@@ -164,7 +170,8 @@ function Map() {
     else if (layerType == 'circle') {
       CreateThreeDModel(geoJson as ThreeDModelPointGeoJson, layer,  _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
       // CREATE THREE_D_Model ...
-      // TODO: modal açıp bilgiler alınacak 
+      setThreeDModelId(_id);
+      setShowThreeDModelEdit(true);
     }
     else if (layerType == 'polygon') {
       if (polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) throw new Error('Before adding a polygon, you have to add an entrance point');
@@ -201,6 +208,9 @@ function Map() {
       else if (layer.customProperties?.typeOfData == 'circlemarker') {
         UpdateAdvancedPoint(layer);
       }
+      else if (layer.customProperties?.typeOfData == 'circle') {
+        UpdateThreeDModel(layer);
+      }
       else {
         throw new Error('Does not support this type of data for update unsuported Type');
       }
@@ -213,6 +223,7 @@ function Map() {
 
       <ModalPolygonInfo isShowing={showPolyEdit} showModal={setShowPolyEdit} polygonId={polygonId} />
       <ModalAdvencedPointInfo isShowing={showAdvPointEdit} showModal={setShowAdvPointEdit} advancedPointId={advPointId} />
+      <ModalThreeDModelInfo isShowing={showThreeDModelEdit} showModal={setShowThreeDModelEdit} threeDModelId={threeDModelId} />
     </>
   );
 }

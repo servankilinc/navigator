@@ -283,22 +283,21 @@ export default function ImageController(): React.JSX.Element {
     [dispatch]
   );
 
+  if (!map) return <></>;
+
   return (
     <ListGroup className="shadow">
       <ListGroup.Item className="bg-light text-primary fw-bold">Krokiler</ListGroup.Item>
 
-      {map && (
-        <ListGroup.Item className="bg-light ">
-          <Form.Group controlId="formFile" className="my-2">
-            <Form.Control type="file" accept="image/*" onChange={HandleFileUpload} />
-          </Form.Group>
-        </ListGroup.Item>
-      )}
+      <ListGroup.Item className="bg-light ">
+        <Form.Group controlId="formFile" className="my-2">
+          <Form.Control type="file" accept="image/*" onChange={HandleFileUpload} />
+        </Form.Group>
+      </ListGroup.Item>
 
-      {map &&
-        sketchList &&
+      {sketchList &&
         sketchList.map((sketch, index) => (
-          <ListGroup.Item key={index} className="bg-light">
+          <ListGroup.Item key={sketch.id} className="bg-light">
             <Stack direction={'vertical'} className="justify-content-between">
               <ImageSettings
                 index={index}

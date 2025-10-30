@@ -273,16 +273,16 @@ export const storageSlice = createSlice({
       }
     },
 
-    setThreeDModelRotation: (state, action: PayloadAction<{ id: string; rotateX: number; rotateY: number; rotateZ: number }>) => {
+    setThreeDModelRotation: (state, action: PayloadAction<{ id: string; rotateX: number | undefined; rotateY: number | undefined; rotateZ: number | undefined }>) => {
       const index = state.threeDModels.findIndex((p) => p.properties.id === action.payload.id);
       if (index !== -1) {
         state.threeDModels[index] = {
           ...state.threeDModels[index],
           properties: {
             ...state.threeDModels[index].properties,
-            rotateX: action.payload.rotateX,
-            rotateY: action.payload.rotateY,
-            rotateZ: action.payload.rotateZ,
+            rotateX: action.payload.rotateX ?? state.threeDModels[index].properties.rotateX,
+            rotateY: action.payload.rotateY ?? state.threeDModels[index].properties.rotateY,
+            rotateZ: action.payload.rotateZ ?? state.threeDModels[index].properties.rotateZ,
           },
         };
       }

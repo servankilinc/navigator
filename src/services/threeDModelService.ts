@@ -54,7 +54,15 @@ export function ShowThreeDModel(threeDModel: ThreeDModelPointGeoJson, drawnItems
   });
 }
 
-export function UpdatePositionThreeDModel(layer: CustomLayer) {
+export function RotateThreeDModelPoint(threeDModel: ThreeDModelPointGeoJson, newRotationYDeg: number, drawnItems: L.FeatureGroup<any>) {
+  const layer = drawnItems.getLayer(threeDModel.properties.layerId!) as L.Marker;
+  if (layer && layer instanceof L.Marker) {
+    const newIcon = iconModelPoint(newRotationYDeg);
+    layer.setIcon(newIcon);
+  }
+}
+
+export function UpdateThreeDModel(layer: CustomLayer) {
   const threeDModelList = store.getState().storageReducer.threeDModels;
   if (threeDModelList == null) throw new Error('ThreeD Model list could not found');
 
