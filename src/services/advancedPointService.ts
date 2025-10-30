@@ -58,7 +58,7 @@ export function ShowAdvancedPoint(advancedPoint: AdvancedPointGeoJson, drawnItem
           circleMarker =  L.marker(latLng, { icon: customIconElevator })
           break;
         case AdvancedPointTypes.stairs:
-          circleMarker = L.marker(latLng, {icon: customIconStairs});
+          circleMarker = L.marker(latLng, { icon: customIconStairs });
           break;
         default:
           circleMarker = L.circleMarker(latLng);

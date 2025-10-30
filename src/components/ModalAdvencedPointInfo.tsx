@@ -22,10 +22,6 @@ export default function ModalAdvencedPointInfo({ isShowing, showModal, advancedP
   const [pointName, setPointName] = useState<string>('');
   const [pointType, setPointType] = useState<AdvancedPointTypes>(AdvancedPointTypes.stairs);
   const [targetFloorList, setTargetFloorList] = useState<string[]>([]);
-
-  useEffect(() => {
-    console.log("targetFloorList = ",targetFloorList)
-  },[targetFloorList])
   
   useEffect(() => {
     if (isShowing == true) {

@@ -4,7 +4,7 @@ import { FaFileArrowUp } from 'react-icons/fa6';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import './styles/App.css';
 import { setCurrentFloor } from './redux/reducers/appSlice';
-import { addFloor, setAdvancedPointList, setEntrancePointList, setFloorList, setGraphList, setPathList, setPolygonList } from './redux/reducers/storageSlice';
+import { addFloor, setAdvancedPointList, setEntrancePointList, setFloorList, setGraphList, setPathList, setPolygonList, setThreeDModels } from './redux/reducers/storageSlice';
 import e7 from './scripts/idGenerator';
 import Map from './components/Map';
 import Floors from './components/Floors';
@@ -26,7 +26,8 @@ import SketchModel from './models/UIModels/SketchModel';
 import { FindIntersections } from './services/pathService';
 import { DesignGraph } from './services/graphService';
 import GraphBaseModel from './models/GraphBaseModel';
-
+import ThreeDModelPointGeoJson from './models/Features/ThreeDModelPointGeoJson';
+ 
 function App(): React.JSX.Element {
   const dispatch = useAppDispatch();
 
@@ -38,6 +39,7 @@ function App(): React.JSX.Element {
   const graphList = useAppSelector((state) => state.storageReducer.graphList);
   const pathList = useAppSelector((state) => state.storageReducer.paths);
   const polygonList = useAppSelector((state) => state.storageReducer.polygons);
+  const threeDModelList = useAppSelector((state) => state.storageReducer.threeDModels);
 
   const sketchList = useAppSelector((state) => state.mapReducer.sketchList);
 
@@ -53,6 +55,7 @@ function App(): React.JSX.Element {
       const res_graph = await fetch(`${import.meta.env.VITE_API_URL}/api/graph`);
       const res_path = await fetch(`${import.meta.env.VITE_API_URL}/api/path`);
       const res_polygon = await fetch(`${import.meta.env.VITE_API_URL}/api/polygon`);
+      const res_threeDModels = await fetch(`${import.meta.env.VITE_API_URL}/api/threeDModel`);
 
       const data_advancedPoint: AdvancedPointGeoJson[] = await res_advancedPoint.json();
       const data_entrancePoint: EntrancePointGeoJson[] = await res_entrancePoint.json();
@@ -60,6 +63,7 @@ function App(): React.JSX.Element {
       const data_graph: GraphBaseModel[] = await res_graph.json();
       const data_path: LineStringGeoJson[] = await res_path.json();
       const data_polygon: PolygonGeoJson[] = await res_polygon.json();
+      const data_threeDModels: ThreeDModelPointGeoJson[] = await res_threeDModels.json();
 
       if (data_floor == null || data_floor.length <= 0) {
         dispatch(showAlertSuccess({ message: 'Sunucu Tarafında Bilgi Bulunmaıyor!' }));
@@ -70,6 +74,9 @@ function App(): React.JSX.Element {
       dispatch(setAdvancedPointList(data_advancedPoint));
       dispatch(setEntrancePointList(data_entrancePoint));
       dispatch(setFloorList(data_floor));
+      dispatch(setPathList(data_path));
+      dispatch(setPolygonList(data_polygon));
+      dispatch(setThreeDModels(data_threeDModels));
       // if(data_graph && data_graph.length > 0) dispatch(setGraphList(data_graph.map(d => d.mapToGraph())));
       if (data_graph && data_graph.length > 0) {
         const _graphList: Graph[] = [];
@@ -87,8 +94,6 @@ function App(): React.JSX.Element {
         })
         dispatch(setGraphList(_graphList));
       }
-      dispatch(setPathList(data_path));
-      dispatch(setPolygonList(data_polygon));
 
       dispatch(showAlertSuccess({ message: 'Veriler başarıyal getirildi.' }));
 
@@ -119,6 +124,7 @@ function App(): React.JSX.Element {
       await fetch(`${import.meta.env.VITE_API_URL}/api/graph/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(graphList.map(d => d.toBaseModel())) });
       await fetch(`${import.meta.env.VITE_API_URL}/api/path/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pathList) });
       await fetch(`${import.meta.env.VITE_API_URL}/api/polygon/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(polygonList) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/polygon/ThreeDModel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(threeDModelList) });
       if (sketchList != null) {
         let sketchCreateModels = sketchList.map((d) => new SketchModel(d));
         await fetch(`${import.meta.env.VITE_API_URL}/api/sketch/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sketchCreateModels) });

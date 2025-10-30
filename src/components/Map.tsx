@@ -18,6 +18,8 @@ import { CreateEntrancePoint, ShowEntrancePoint, UpdateEntrancePoint } from '../
 import { CreatePolygon, ShowPolygon, UpdatePolygon } from '../services/polygonService';
 import { CreatePath, ShowPath, UpdatePath } from '../services/pathService';
 import { showAlertError } from '../redux/reducers/alertSlice';
+import { CreateThreeDModel } from '../services/threeDModelService';
+import ThreeDModelPointGeoJson from '../models/Features/ThreeDModelPointGeoJson';
 
 function Map() {
   const dispatch = useAppDispatch();
@@ -76,7 +78,7 @@ function Map() {
     const map = L.map('map', {
       minZoom: import.meta.env.VITE_MIN_VITE_ZOOM,
       maxZoom: import.meta.env.VITE_MAX_VITE_ZOOM,
-    }).setView([import.meta.env.VITE_CENTER_LAT, import.meta.env.VITE_CENTER_LNGC ], import.meta.env.VITE_ZOOM);
+    }).setView([import.meta.env.VITE_CENTER_LAT, import.meta.env.VITE_CENTER_LNG ], import.meta.env.VITE_ZOOM);
     
     dispatch(setMap(map));
     // https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
@@ -102,7 +104,7 @@ function Map() {
       },
       draw: {
         rectangle: false,
-        circle: false,
+        // circle: false,
       },
     });
 
@@ -158,6 +160,11 @@ function Map() {
 
       setAdvPointId(_id);
       setShowAdvPointEdit(true);
+    }
+    else if (layerType == 'circle') {
+      CreateThreeDModel(geoJson as ThreeDModelPointGeoJson, layer,  _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
+      // CREATE THREE_D_Model ...
+      // TODO: modal açıp bilgiler alınacak 
     }
     else if (layerType == 'polygon') {
       if (polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) throw new Error('Before adding a polygon, you have to add an entrance point');

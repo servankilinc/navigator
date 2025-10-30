@@ -11,6 +11,7 @@ import { AdvancedPointDirectionTypesEnums } from '../../models/AdvancedPointDire
 import IntersectionPoint from '../../models/IntersectionPoint';
 import Route from '../../models/Route';
 import { Position } from 'geojson';
+import ThreeDModelPointGeoJson from '../../models/Features/ThreeDModelPointGeoJson';
 
 interface StateUI {
   floorList: Floor[];
@@ -20,6 +21,7 @@ interface StateUI {
   intersectionPoints: IntersectionPoint[];
   entrancePoints: EntrancePointGeoJson[];
   advancedPoints: AdvancedPointGeoJson[];
+  threeDModels: ThreeDModelPointGeoJson[];
   routeList: Route[];
 }
 
@@ -31,6 +33,7 @@ const initialState: StateUI = {
   intersectionPoints: [],
   entrancePoints: [],
   advancedPoints: [],
+  threeDModels: [],
   routeList: [],
 };
 
@@ -57,6 +60,9 @@ export const storageSlice = createSlice({
     addAdvancedPoint: (state, action: PayloadAction<AdvancedPointGeoJson>) => {
       state.advancedPoints = [...state.advancedPoints, action.payload];
     },
+    addThreeDModel: (state, action: PayloadAction<ThreeDModelPointGeoJson>) => {
+      state.threeDModels = [...state.threeDModels, action.payload];
+    },
     addRoute: (state, action: PayloadAction<Route>) => {
       state.routeList = [...state.routeList, action.payload];
     },
@@ -82,6 +88,9 @@ export const storageSlice = createSlice({
     },
     setAdvancedPointList: (state, action: PayloadAction<AdvancedPointGeoJson[]>) => {
       state.advancedPoints = [...action.payload];
+    },
+    setThreeDModels: (state, action: PayloadAction<ThreeDModelPointGeoJson[]>) => {
+      state.threeDModels = [...action.payload];
     },
     setIntersectionPointList: (state, action: PayloadAction<IntersectionPoint[]>) => {
       state.intersectionPoints = [...action.payload];
@@ -110,7 +119,9 @@ export const storageSlice = createSlice({
     removeAdvancedPoint: (state, action: PayloadAction<string>) => {
       state.advancedPoints = state.advancedPoints.filter((ap) => ap.properties.id !== action.payload);
     },
-
+    removeThreeDModel: (state, action: PayloadAction<string>) => {
+      state.threeDModels = state.threeDModels.filter((d) => d.properties.id !== action.payload);
+    },
     clearIntersectionPoints: (state) => {
       state.intersectionPoints = [];
     },
@@ -249,6 +260,49 @@ export const storageSlice = createSlice({
       }
     },
 
+    setThreeDModelCoordinates: (state, action: PayloadAction<{ id: string; coordinates: Position }>) => {
+      const index = state.threeDModels.findIndex((p) => p.properties.id === action.payload.id);
+      if (index !== -1) {
+        state.threeDModels[index] = {
+          ...state.threeDModels[index],
+          geometry: {
+            ...state.threeDModels[index].geometry,
+            coordinates: action.payload.coordinates,
+          },
+        };
+      }
+    },
+
+    setThreeDModelRotation: (state, action: PayloadAction<{ id: string; rotateX: number; rotateY: number; rotateZ: number }>) => {
+      const index = state.threeDModels.findIndex((p) => p.properties.id === action.payload.id);
+      if (index !== -1) {
+        state.threeDModels[index] = {
+          ...state.threeDModels[index],
+          properties: {
+            ...state.threeDModels[index].properties,
+            rotateX: action.payload.rotateX,
+            rotateY: action.payload.rotateY,
+            rotateZ: action.payload.rotateZ,
+          },
+        };
+      }
+    },
+
+    setThreeDModelInfo: (state, action: PayloadAction<{ id: string; name: string; source: string; scaleRate: number }>) => {
+      const index = state.threeDModels.findIndex((p) => p.properties.id === action.payload.id);
+      if (index !== -1) {
+        state.threeDModels[index] = {
+          ...state.threeDModels[index],
+          properties: {
+            ...state.threeDModels[index].properties,
+            name: action.payload.name,
+            source: action.payload.source,
+            scaleRate: action.payload.scaleRate,
+          },
+        };
+      }
+    },
+
     splicePathCoordinates: (state, action: PayloadAction<{ prevIndex: number; pathId: string; coordinate: Position }>) => {
       const index = state.paths.findIndex((p) => p.properties.id === action.payload.pathId);
       if (index == -1) return;
@@ -295,6 +349,7 @@ export const {
   addPath,
   addEntrancePoint,
   addAdvancedPoint,
+  addThreeDModel,
   addIntersectionPoint,
   addRoute,
 
@@ -304,6 +359,7 @@ export const {
   setPathList,
   setEntrancePointList,
   setAdvancedPointList,
+  setThreeDModels,
   setIntersectionPointList,
   setRouteList,
 
@@ -312,6 +368,7 @@ export const {
   removePath,
   removeEntrancePoint,
   removeAdvancedPoint,
+  removeThreeDModel,
 
   clearIntersectionPoints,
   clearRoutes,
@@ -325,6 +382,9 @@ export const {
   setEntrancePointCoordinates,
   setAdvancedPointCoordinates,
   setAdvancedPointInfo,
+  setThreeDModelRotation,
+  setThreeDModelCoordinates,
+  setThreeDModelInfo,
   splicePathCoordinates,
   trimPathCoordinates,
 } = storageSlice.actions;
