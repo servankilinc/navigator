@@ -63,7 +63,7 @@ export default function ModalThreeDModelInfo({ isShowing, showModal, threeDModel
           <Form.Control placeholder="Ölçek" type="number" value={scaleRate} onChange={(e) => setScaleRate(Number(e.target.value))} />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formSource">
-          <Form.Control placeholder="KlasörAdı/DosyaAdı" value={sourcePath} disabled={true} className="readonly" />
+          <Form.Control placeholder="KlasörAdı/DosyaAdı" value={sourcePath}  />
         </Form.Group>
       </Modal.Body>
       <Modal.Footer>

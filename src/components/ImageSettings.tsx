@@ -89,19 +89,19 @@ export default function ImageSettings(props: SectionProps): React.JSX.Element {
 
         <Stack direction="horizontal" gap={1}>
           {opacityVal != undefined && opacityVal > 0 ? (
-            <Button onClick={() => OnChangeOpacity(0)} variant="secondary" size="sm">
-              <FaEyeSlash color="#fff" size={14} />
+            <Button onClick={() => OnChangeOpacity(0)} variant="secondary" size="sm" className="py-0 px-1">
+              <FaEyeSlash color="#fff" size={12} />
             </Button>
           ) : (
-            <Button onClick={() => OnChangeOpacity(1)} variant="primary" size="sm">
-              <FaEye color="#fff" size={14} />
+            <Button onClick={() => OnChangeOpacity(1)} variant="primary" size="sm" className="py-0 px-1">
+              <FaEye color="#fff" size={12} />
             </Button>
           )}
-          <Button onClick={() => HandleDelete()} variant="danger" size="sm">
-            <FaTrash color="#fff" size={14} />
+          <Button onClick={() => HandleDelete()} variant="danger" size="sm" className="py-0 px-1">
+            <FaTrash color="#fff" size={12} />
           </Button>
-          <Button onClick={() => FreezingHandler()} variant="light" size="sm">
-            {props.sketch.frozen ? <FaBan color="#801a1aff" size={14} /> : <FaComputerMouse color="#1e3050" size={14} />}
+          <Button onClick={() => FreezingHandler()} variant="light" size="sm" className="py-0 px-1">
+            {props.sketch.frozen ? <FaBan color="#801a1aff" size={12} /> : <FaComputerMouse color="#1e3050" size={14} />}
           </Button>
         </Stack>
       </Stack>

@@ -27,6 +27,7 @@ import { FindIntersections } from './services/pathService';
 import { DesignGraph } from './services/graphService';
 import GraphBaseModel from './models/GraphBaseModel';
 import ThreeDModelPointGeoJson from './models/Features/ThreeDModelPointGeoJson';
+import ThreeDModels from './components/ThreeDModels';
  
 function App(): React.JSX.Element {
   const dispatch = useAppDispatch();
@@ -124,7 +125,7 @@ function App(): React.JSX.Element {
       await fetch(`${import.meta.env.VITE_API_URL}/api/graph/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(graphList.map(d => d.toBaseModel())) });
       await fetch(`${import.meta.env.VITE_API_URL}/api/path/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pathList) });
       await fetch(`${import.meta.env.VITE_API_URL}/api/polygon/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(polygonList) });
-      await fetch(`${import.meta.env.VITE_API_URL}/api/polygon/ThreeDModel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(threeDModelList) });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/threeDModel/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(threeDModelList) });
       if (sketchList != null) {
         let sketchCreateModels = sketchList.map((d) => new SketchModel(d));
         await fetch(`${import.meta.env.VITE_API_URL}/api/sketch/UpdateAll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sketchCreateModels) });
@@ -150,6 +151,7 @@ function App(): React.JSX.Element {
         <Col lg={2}>
           <Stack gap={4}>
             <ImageController />
+            <ThreeDModels />
             <AdvancedPoints />
             <NavigationController />
             <Button variant="primary" className="shadow" onClick={SendAllData}>

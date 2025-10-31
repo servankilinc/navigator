@@ -63,29 +63,21 @@ function Map() {
   useEffect(() => {
     MapInitilaze();
 
-    polygonList.filter((f) => f.properties.floor == 0).map((polygon) => {
-      ShowPolygon(polygon, drawnItemsRef.current!);
-    });
+    polygonList.filter((f) => f.properties.floor == 0).map((polygon) => ShowPolygon(polygon, drawnItemsRef.current!));
 
-    entrancePoints.filter((f) => f.properties.floor == 0).map((entrancePoint) => {
-      ShowEntrancePoint(entrancePoint, drawnItemsRef.current!);
-    });
+    entrancePoints.filter((f) => f.properties.floor == 0).map((entrancePoint) => ShowEntrancePoint(entrancePoint, drawnItemsRef.current!));
 
-    advancedPoints.filter((f) => f.properties.floor == 0).map((advancedPoint) => {
-      ShowAdvancedPoint(advancedPoint, drawnItemsRef.current!);
-    });
+    advancedPoints.filter((f) => f.properties.floor == 0).map((advancedPoint) => ShowAdvancedPoint(advancedPoint, drawnItemsRef.current!));
 
-    pathList.filter((f) => f.properties.floor == 0).map((path) => {
-      ShowPath(path, drawnItemsRef.current!);
-    });
+    pathList.filter((f) => f.properties.floor == 0).map((path) => ShowPath(path, drawnItemsRef.current!));
   }, []);
 
   function MapInitilaze() {
     const map = L.map('map', {
       minZoom: import.meta.env.VITE_MIN_VITE_ZOOM,
       maxZoom: import.meta.env.VITE_MAX_VITE_ZOOM,
-    }).setView([import.meta.env.VITE_CENTER_LAT, import.meta.env.VITE_CENTER_LNG ], import.meta.env.VITE_ZOOM);
-    
+    }).setView([import.meta.env.VITE_CENTER_LAT, import.meta.env.VITE_CENTER_LNG], import.meta.env.VITE_ZOOM);
+
     dispatch(setMap(map));
     // https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
@@ -116,10 +108,10 @@ function Map() {
 
     map.addControl(drawControl);
 
-    map.on(L.Draw.Event.CREATED,  (event: L.LeafletEvent): void => {
+    map.on(L.Draw.Event.CREATED, (event: L.LeafletEvent): void => {
       try {
         CreateHandler(event);
-      }
+      } 
       catch (error) {
         dispatch(showAlertError({ message: (error as Error).message }));
       }
@@ -139,7 +131,6 @@ function Map() {
     };
   }
 
-  
   const CreateHandler = (event: L.LeafletEvent): void => {
     const createEvent = event as L.DrawEvents.Created;
     const layer = createEvent.layer as CustomLayer;
@@ -158,7 +149,8 @@ function Map() {
     };
 
     if (layerType == 'marker') {
-      if ((polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) == false) throw new Error('Before adding a entrance point, you have to add an building point');
+      if ((polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) == false)
+        throw new Error('Before adding a entrance point, you have to add an building point');
       CreateEntrancePoint(geoJson as EntrancePointGeoJson, layer, _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
     }
     else if (layerType == 'circlemarker') {
@@ -168,13 +160,14 @@ function Map() {
       setShowAdvPointEdit(true);
     }
     else if (layerType == 'circle') {
-      CreateThreeDModel(geoJson as ThreeDModelPointGeoJson, layer,  _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
+      CreateThreeDModel(geoJson as ThreeDModelPointGeoJson, layer, _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
       // CREATE THREE_D_Model ...
       setThreeDModelId(_id);
       setShowThreeDModelEdit(true);
     }
     else if (layerType == 'polygon') {
-      if (polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false) throw new Error('Before adding a polygon, you have to add an entrance point');
+      if (polygonListRef.current != null && polygonListRef.current.length > 0 && isEntrancePointAddedRef.current == false)
+        throw new Error('Before adding a polygon, you have to add an entrance point');
 
       CreatePolygon(geoJson as PolygonGeoJson, layer, _id, currentFloorRef.current?.index!, drawnItemsRef.current!);
 
@@ -195,7 +188,6 @@ function Map() {
 
     layers.eachLayer(function (_layer) {
       const layer = _layer as CustomLayer;
-
       if (layer.customProperties?.typeOfData == 'polygon') {
         UpdatePolygon(layer);
       }
@@ -208,7 +200,7 @@ function Map() {
       else if (layer.customProperties?.typeOfData == 'circlemarker') {
         UpdateAdvancedPoint(layer);
       }
-      else if (layer.customProperties?.typeOfData == 'circle') {
+      else if (layer.customProperties?.typeOfData == 'modelPoint') {
         UpdateThreeDModel(layer);
       }
       else {
@@ -216,11 +208,11 @@ function Map() {
       }
     });
   };
-  
+
   return (
     <>
       <div id="map" style={{ width: '100%', height: '90vh' }}></div>
-
+      
       <ModalPolygonInfo isShowing={showPolyEdit} showModal={setShowPolyEdit} polygonId={polygonId} />
       <ModalAdvencedPointInfo isShowing={showAdvPointEdit} showModal={setShowAdvPointEdit} advancedPointId={advPointId} />
       <ModalThreeDModelInfo isShowing={showThreeDModelEdit} showModal={setShowThreeDModelEdit} threeDModelId={threeDModelId} />

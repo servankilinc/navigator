@@ -11,6 +11,7 @@ import CustomLayer from '../models/Features/CustomLayer';
 import Floor from '../models/Floor';
 import e7 from '../scripts/idGenerator';
 import { ShowRoute } from '../services/navigationService';
+import { ShowThreeDModel } from '../services/threeDModelService';
 
 function Floors() {
   const drawnItems = useAppSelector((state) => state.mapReducer.drawnItems);
@@ -24,7 +25,8 @@ function Floors() {
   const entrancePointList = useAppSelector((state) => state.storageReducer.entrancePoints);
   const advancedPointList = useAppSelector((state) => state.storageReducer.advancedPoints);
   const routeList = useAppSelector((state) => state.storageReducer.routeList);
-
+  const threeDModelList = useAppSelector((state) => state.storageReducer.threeDModels);
+  
   const dispath = useAppDispatch();
 
   function AddNewFloor(count: number): void {
@@ -81,6 +83,12 @@ function Floors() {
         ShowPath(path, drawnItems!);
       });
       
+    threeDModelList
+      .filter((f) => f.properties.floor == nextFloor.index)
+      .map((path) => {
+        ShowThreeDModel(path, drawnItems!);
+      });
+
     routeList
       .filter((f) => f.floor == nextFloor.index)
       .map((route) => {
